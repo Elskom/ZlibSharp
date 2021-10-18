@@ -34,4 +34,8 @@ internal static class SafeNativeMethods
     [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
     [DllImport("zlib", CallingConvention = CallingConvention.Cdecl)]
     internal static extern ZlibResult deflateEnd(ref ZStream zs);
+
+    [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
+    [DllImport("zlib", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern unsafe ulong adler32(ulong adler, byte* buf, uint len);
 }
