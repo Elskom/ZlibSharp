@@ -108,12 +108,11 @@ public static class MemoryZlib
     {
         try
         {
-            using var tmpStream = new MemoryStream(inData);
             using var outZStream = new ZlibStream(outStream, level, true);
-            tmpStream.CopyTo(outZStream);
+            outZStream.Write(inData, 0, inData.Length);
             outZStream.Flush();
             outZStream.Finish();
-            return (uint)(outZStream.GetAdler32() & 0xffff);
+            return (uint)(outZStream.GetAdler32().Value & 0xffff);
         }
         catch (NotPackableException ex)
         {
@@ -293,5 +292,13 @@ public static class MemoryZlib
     /// <param name="data">The data to checksum.</param>
     /// <returns>The Adler32 hash of the input data.</returns>
     public static unsafe ulong ZlibGetAdler32(byte[] data)
-        => SafeNativeMethods.adler32(SafeNativeMethods.adler32(0L, null, 0), (byte*)data[0], (uint)data.Length);
+    {
+        fixed (byte* pdata = data)
+        {
+            return UnsafeNativeMethods.adler32(
+                UnsafeNativeMethods.adler32(0L, null, 0),
+                pdata,
+                (uint)data.Length);
+        }
+    }
 }

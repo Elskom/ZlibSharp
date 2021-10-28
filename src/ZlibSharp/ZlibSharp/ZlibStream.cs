@@ -161,7 +161,7 @@ public class ZlibStream : Stream
     /// Gets the Adler32 hash of the original data.
     /// </summary>
     /// <returns>The Adler32 hash of the original data.</returns>
-    public ulong GetAdler32()
+    public CULong GetAdler32()
         => this.zs.adler;
 
     protected override void Dispose(bool disposing)
