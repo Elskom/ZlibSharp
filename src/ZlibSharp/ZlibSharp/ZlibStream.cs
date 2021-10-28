@@ -7,8 +7,8 @@ namespace ZlibSharp;
 
 public class ZlibStream : Stream
 {
-    // private bool isDisposed;
     private ZStream zs;
+    private static bool zlibResolverAdded;
 
     public ZlibStream(Stream input)
         : this(input, false)
@@ -21,6 +21,10 @@ public class ZlibStream : Stream
         this.BaseStream = input;
         this.KeepOpen = keepOpen;
         this.zs = new();
+        if (!zlibResolverAdded)
+        {
+            AddNativeResolver();
+        }
 
         // initialize inflater.
         if (ZlibHelper.InitializeInflate(ref this.zs))
@@ -40,6 +44,10 @@ public class ZlibStream : Stream
         this.BaseStream = output;
         this.KeepOpen = keepOpen;
         this.zs = new();
+        if (!zlibResolverAdded)
+        {
+            AddNativeResolver();
+        }
 
         // initialize deflater.
         if (!ZlibHelper.InitializeDeflate(ref this.zs, level))
@@ -67,7 +75,17 @@ public class ZlibStream : Stream
     }
 
     // default flush mode of no flush.
+    /// <summary>
+    /// The flush mode to use with zlib.
+    /// </summary>
     public ZlibFlushStrategy FlushMode { get; set; } = ZlibFlushStrategy.NoFlush;
+
+    /// <summary>
+    /// Gets or sets the native zlib version to use.
+    ///
+    /// Default: version 1.2.11
+    /// </summary>
+    public static string ZlibVersion { get; set; } = "1.2.11";
 
     /// <summary>
     /// Gets a value indicating whether the stream is finished.
@@ -190,5 +208,37 @@ public class ZlibStream : Stream
         }
 
         base.Dispose(disposing);
+    }
+
+    private static void AddNativeResolver()
+    {
+        NativeLibrary.SetDllImportResolver(typeof(ZlibStream).Assembly,
+            (name, assembly, path) =>
+            {
+                nint handle;
+                // check if name is zlib and the operating system is not Windows.
+                // Otherwise, fallback to default import resolver.
+                if (name == "zlib" && !OperatingSystem.IsWindows())
+                {
+                    if (OperatingSystem.IsLinux() || OperatingSystem.IsFreeBSD())
+                    {
+                        // require zlib from "sudo apt install zlib1g" or
+                        // "sudo apt install zlib1g-dev".
+                        _ = NativeLibrary.TryLoad($"libz.so.{ZlibVersion}", assembly, path, out handle);
+                    }
+                    else if (OperatingSystem.IsMacOS() || OperatingSystem.IsMacCatalyst())
+                    {
+                        // require homebrew zlib.
+                        _ = NativeLibrary.TryLoad($"/usr/local/Cellar/zlib/{ZlibVersion}/lib/libz.{ZlibVersion}.dylib", out handle);
+                    }
+                    else
+                    {
+                        throw new NotSupportedException("Zlib is probably not supported on mobile devices.");
+                    }
+                }
+
+                return handle;
+            });
+        zlibResolverAdded = true;
     }
 }
