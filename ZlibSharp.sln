@@ -7,6 +7,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E8D38FC0-102
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZlibSharp", "src\ZlibSharp\ZlibSharp.csproj", "{3A7B5BBE-2310-4C59-A5FA-6BB88EE95BF5}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{4E63757D-7E5B-4116-BDE9-F9343D31A7F3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZlibSharp.Tests", "tests\ZlibSharp.Tests.csproj", "{62F17F63-2EEC-4658-8F1F-25B96C01B63B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,11 +21,16 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{3A7B5BBE-2310-4C59-A5FA-6BB88EE95BF5} = {E8D38FC0-1023-473E-A78B-6AAFCE5E18FF}
+		{62F17F63-2EEC-4658-8F1F-25B96C01B63B} = {4E63757D-7E5B-4116-BDE9-F9343D31A7F3}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{3A7B5BBE-2310-4C59-A5FA-6BB88EE95BF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3A7B5BBE-2310-4C59-A5FA-6BB88EE95BF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3A7B5BBE-2310-4C59-A5FA-6BB88EE95BF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3A7B5BBE-2310-4C59-A5FA-6BB88EE95BF5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{62F17F63-2EEC-4658-8F1F-25B96C01B63B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62F17F63-2EEC-4658-8F1F-25B96C01B63B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62F17F63-2EEC-4658-8F1F-25B96C01B63B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62F17F63-2EEC-4658-8F1F-25B96C01B63B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

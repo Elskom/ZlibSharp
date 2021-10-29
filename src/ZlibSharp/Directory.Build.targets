@@ -1,0 +1,8 @@
+<Project>
+
+  <ItemGroup>
+    <Using Include="System.Runtime.InteropServices" />
+    <Using Include="System.Runtime.Serialization" />
+  </ItemGroup>
+
+</Project>

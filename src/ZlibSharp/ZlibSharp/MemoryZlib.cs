@@ -123,10 +123,6 @@ public static class MemoryZlib
             // the compression failed because of a support failure.
             throw new NotPackableException("Compression Failed.", ex);
         }
-        catch (StackOverflowException ex)
-        {
-            throw new NotPackableException("Compression Failed due to a stack overflow.", ex);
-        }
         catch (IOException ex) when (ex is not NotPackableException)
         {
             throw new NotPackableException("Compression Failed.", ex);
@@ -185,10 +181,6 @@ public static class MemoryZlib
         catch (NotUnpackableException ex)
         {
             throw new NotUnpackableException("Decompression Failed.", ex);
-        }
-        catch (StackOverflowException ex)
-        {
-            throw new NotPackableException("Decompression Failed due to a stack overflow.", ex);
         }
         catch (NotSupportedException ex)
         {
