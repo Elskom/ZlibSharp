@@ -4,7 +4,6 @@
     <Using Include="System.Runtime.InteropServices" />
     <Using Include="System.Runtime.Serialization" />
     <Using Include="System.Runtime.CompilerServices"/>
-    
   </ItemGroup>
 
 </Project>
