@@ -133,7 +133,7 @@ public class ZlibStream : Stream
         }
         while (cnt > this.BufferSize);
         var buf = bufList.ToArray();
-        _ = ZlibHelper.Decompress(ref this.zs, ref buffer, ref buf, FlushMode);
+        _ = ZlibHelper.Decompress(ref this.zs, buffer, buf, FlushMode);
         return read;
     }
 
@@ -160,7 +160,7 @@ public class ZlibStream : Stream
         // avoid allocating a needless span and then another array when offset is 0.
         var buf = offset > 0 ? buffer.AsSpan(offset, count).ToArray() : buffer;
         var dest = new byte[count];
-        _ = ZlibHelper.Compress(ref this.zs, ref dest, ref buf, FlushMode);
+        _ = ZlibHelper.Compress(ref this.zs, dest, buf, FlushMode);
         this.BaseStream.Write(dest);
     }
 

@@ -56,7 +56,7 @@ internal static class ZlibHelper
         }
     }
 
-    internal static unsafe ZlibResult Decompress(ref ZStream zs, ref byte[] dest, ref byte[] source, ZlibFlushStrategy flush)
+    internal static unsafe ZlibResult Decompress(ref ZStream zs, byte[] source, byte[] dest, ZlibFlushStrategy flush)
     {
         ZlibResult ret;
         fixed (byte* psource = source)
@@ -83,7 +83,7 @@ internal static class ZlibHelper
         return ret;
     }
 
-    internal static unsafe bool Compress(ref ZStream zs, ref byte[] dest, ref byte[] source, ZlibFlushStrategy flush)
+    internal static unsafe bool Compress(ref ZStream zs, byte[] source, byte[] dest, ZlibFlushStrategy flush)
     {
         ZlibResult ret;
         fixed (byte* psource = source)
