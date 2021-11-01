@@ -8,264 +8,101 @@ namespace ZlibSharp;
 /// <summary>
 /// Zlib Memory Compression and Decompression Helper Class.
 /// </summary>
-public static class MemoryZlib
+public static unsafe class MemoryZlib
 {
-    /// <summary>
-    /// Compresses data using the default compression level.
-    /// </summary>
-    /// <param name="inData">The original input data.</param>
-    /// <exception cref="NotPackableException">
-    /// Thrown when the internal compression stream errors in any way.
-    /// </exception>
-    /// <returns>
-    /// The compressed data.
-    /// </returns>
-    public static byte[] Compress(byte[] inData)
-        => Compress(inData, ZlibCompressionLevel.DefaultCompression);
-
-    /// <summary>
-    /// Compresses a file using the default compression level.
-    /// </summary>
-    /// <param name="path">The file to compress.</param>
-    /// <exception cref="NotPackableException">
-    /// Thrown when the internal compression stream errors in any way.
-    /// </exception>
-    /// <returns>
-    /// The compressed data.
-    /// </returns>
-    public static byte[] Compress(string path)
-        => Compress(path, ZlibCompressionLevel.DefaultCompression);
-
-    /// <summary>
-    /// Compresses data using an specific compression level.
-    /// </summary>
-    /// <param name="inData">The original input data.</param>
-    /// <param name="level">The compression level to use.</param>
-    /// <exception cref="NotPackableException">
-    /// Thrown when the internal compression stream errors in any way.
-    /// </exception>
-    /// <returns>
-    /// The compressed data.
-    /// </returns>
-    // discard returned adler32. The caller does not want it.
-    public static byte[] Compress(byte[] inData, ZlibCompressionLevel level)
-        => CompressHash(inData, level).OutData;
-
-    /// <summary>
-    /// Compresses a file using the default compression level.
-    /// </summary>
-    /// <param name="path">The file to compress.</param>
-    /// <param name="level">The compression level to use.</param>
-    /// <exception cref="NotPackableException">
-    /// Thrown when the internal compression stream errors in any way.
-    /// </exception>
-    /// <returns>
-    /// The compressed data.
-    /// </returns>
-    // discard returned adler32. The caller does not want it.
-    public static byte[] Compress(string path, ZlibCompressionLevel level)
-        => CompressHash(path, level).OutData;
-
-    /// <summary>
-    /// Compresses data using the default compression level and outputs an adler32 hash with the data.
-    /// </summary>
-    /// <param name="inData">The original input data.</param>
-    /// <exception cref="NotPackableException">
-    /// Thrown when the internal compression stream errors in any way.
-    /// </exception>
-    /// <returns>
-    /// A <see cref="ValueTuple"/> containing the compressed data, as well as the adler32 hash of that data.
-    /// </returns>
-    public static (byte[] OutData, uint Adler32) CompressHash(byte[] inData)
-        => CompressHash(inData, ZlibCompressionLevel.DefaultCompression);
-
-    /// <summary>
-    /// Compresses a file using the default compression level and outputs an adler32 hash with the data.
-    /// </summary>
-    /// <param name="path">The file to compress.</param>
-    /// <exception cref="NotPackableException">
-    /// Thrown when the internal compression stream errors in any way.
-    /// </exception>
-    /// <returns>
-    /// A <see cref="ValueTuple"/> containing the compressed data, as well as the adler32 hash of that data.
-    /// </returns>
-    public static (byte[] OutData, uint Adler32) CompressHash(string path)
-        => CompressHash(File.ReadAllBytes(path), ZlibCompressionLevel.DefaultCompression);
-
-    /// <summary>
-    /// Compresses data using an specific compression level and outputs an adler32 hash with the data.
-    /// </summary>
-    /// <param name="inData">The original input data.</param>
-    /// <param name="outStream">The compressed output data.</param>
-    /// <param name="level">The compression level to use.</param>
-    /// <exception cref="NotPackableException">
-    /// Thrown when the internal compression stream errors in any way.
-    /// </exception>
-    /// <returns>
-    /// The adler32 hash of the compressed data.
-    /// </returns>
-    public static uint CompressHash(byte[] inData, Stream outStream, ZlibCompressionLevel level)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint Compress(byte[] Source, byte[] Dest, ZlibCompressionLevel CompressionLevel = ZlibCompressionLevel.DefaultCompression)
     {
-        try
-        {
-            using var outZStream = new ZlibStream(outStream, level, true);
-            outZStream.Write(inData, 0, inData.Length);
-            outZStream.Flush();
-            outZStream.Finish();
-            return (uint)(outZStream.GetAdler32().Value & 0xffff);
-        }
-        catch (NotPackableException ex)
-        {
-            throw new NotPackableException("Compression Failed.", ex);
-        }
-        catch (NotSupportedException ex)
-        {
-            // the compression failed because of a support failure.
-            throw new NotPackableException("Compression Failed.", ex);
-        }
-        catch (IOException ex) when (ex is not NotPackableException)
-        {
-            throw new NotPackableException("Compression Failed.", ex);
-        }
+        return Compress(Source.AsSpan(), Dest.AsSpan(), CompressionLevel);
     }
-
-    /// <summary>
-    /// Compresses data using an specific compression level and outputs an adler32 hash with the data.
-    /// </summary>
-    /// <param name="inData">The original input data.</param>
-    /// <param name="level">The compression level to use.</param>
-    /// <exception cref="NotPackableException">
-    /// Thrown when the internal compression stream errors in any way.
-    /// </exception>
-    /// <returns>
-    /// A <see cref="ValueTuple"/> containing the compressed data, as well as the adler32 hash of that data.
-    /// </returns>
-    public static (byte[] OutData, uint Adler32) CompressHash(byte[] inData, ZlibCompressionLevel level)
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint Compress(string SourcePath, byte[] Dest, ZlibCompressionLevel CompressionLevel = ZlibCompressionLevel.DefaultCompression)
     {
-        using var outMemoryStream = new MemoryStream();
-        var result = CompressHash(inData, outMemoryStream, level);
-        return (outMemoryStream.ToArray(), result);
+        var Source = File.ReadAllBytes(SourcePath);
+        
+        return Compress(Source, Dest, CompressionLevel);
     }
-
-    /// <summary>
-    /// Compresses a file using an specific compression level and outputs an adler32 hash with the data.
-    /// </summary>
-    /// <param name="path">The file to compress.</param>
-    /// <param name="level">The compression level to use.</param>
-    /// <exception cref="NotPackableException">
-    /// Thrown when the internal compression stream errors in any way.
-    /// </exception>
-    /// <returns>
-    /// A <see cref="ValueTuple"/> containing the compressed data, as well as the adler32 hash of that data.
-    /// </returns>
-    public static (byte[] OutData, uint Adler32) CompressHash(string path, ZlibCompressionLevel level)
-        => CompressHash(File.ReadAllBytes(path), level);
-
-    /// <summary>
-    /// Decompresses data.
-    /// </summary>
-    /// <param name="inData">The compressed input data.</param>
-    /// <param name="outStream">The decompressed output data.</param>
-    /// <exception cref="NotUnpackableException">
-    /// Thrown when the internal decompression stream errors in any way.
-    /// </exception>
-    public static void Decompress(byte[] inData, Stream outStream)
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint Compress(Span<byte> Source, Span<byte> Dest, ZlibCompressionLevel CompressionLevel = ZlibCompressionLevel.DefaultCompression)
     {
-        try
-        {
-            using var outZStream = new ZlibStream(new MemoryStream(inData));
-            outZStream.CopyTo(outStream);
-            outZStream.Flush();
-            outZStream.Finish();
-        }
-        catch (NotUnpackableException ex)
-        {
-            throw new NotUnpackableException("Decompression Failed.", ex);
-        }
-        catch (NotSupportedException ex)
-        {
-            // the decompression failed because of a support failure.
-            throw new NotPackableException("Compression Failed.", ex);
-        }
-        catch (IOException ex) when (ex is not NotUnpackableException)
-        {
-            throw new NotUnpackableException("Decompression Failed.", ex);
-        }
+        return Compress(Source, Dest, CompressionLevel, out _);
     }
-
-    /// <summary>
-    /// Decompresses data.
-    /// </summary>
-    /// <param name="inData">The compressed input data.</param>
-    /// <exception cref="NotUnpackableException">
-    /// Thrown when the internal decompression stream errors in any way.
-    /// </exception>
-    /// <returns>
-    /// The decompressed data.
-    /// </returns>
-    public static byte[] Decompress(byte[] inData)
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint Compress(Span<byte> Source, Span<byte> Dest, ZlibCompressionLevel CompressionLevel, out uint Adler32)
     {
-        using var outMemoryStream = new MemoryStream();
-        Decompress(inData, outMemoryStream);
-        return outMemoryStream.ToArray();
+        return ZlibHelper.Compress(Source, Dest, CompressionLevel, out Adler32);
     }
-
-    /// <summary>
-    /// Decompresses a file.
-    /// </summary>
-    /// <param name="path">The file to decompress.</param>
-    /// <exception cref="NotPackableException">
-    /// Thrown when the internal decompression stream errors in any way.
-    /// </exception>
-    /// <returns>
-    /// The decompressed data.
-    /// </returns>
-    public static byte[] Decompress(string path)
-        => Decompress(File.ReadAllBytes(path));
-
-    /// <summary>
-    /// Check data for compression by zlib.
-    /// </summary>
-    /// <param name="stream">Input stream.</param>
-    /// <returns>Returns <see langword="true" /> if data is compressed by zlib, else <see langword="false" />.</returns>
-    /// <exception cref="ArgumentNullException">When <paramref name="stream"/> is <see langword="null" />.</exception>
-    public static bool IsCompressedByZlib(Stream stream)
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint Decompress(byte[] Source, byte[] Dest, out uint BytesWritten)
     {
-        if (stream == null)
-        {
-            throw new ArgumentNullException(nameof(stream));
-        }
-
-        var byte1 = stream.ReadByte();
-        var byte2 = stream.ReadByte();
-        if (byte1 is -1 || byte2 is -1)
-        {
-            return false;
-        }
-
-        _ = stream.Seek(-2, SeekOrigin.Current);
-        return (byte)byte1 is 0x78 && (byte)byte2 is 0x01 or 0x5E or 0x9C or 0xDA;
+        return Decompress(Source.AsSpan(), Dest.AsSpan(), out BytesWritten);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint Decompress(string SourcePath, byte[] Dest, out uint BytesWritten)
+    {
+        var Source = File.ReadAllBytes(SourcePath);
+        
+        return Decompress(Source, Dest, out BytesWritten);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint Decompress(Span<byte> Source, Span<byte> Dest, out uint BytesWritten)
+    {
+        return Decompress(Source, Dest, out BytesWritten, out _);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint Decompress(Span<byte> Source, Span<byte> Dest, out uint BytesWritten, out uint Adler32)
+    {
+        return ZlibHelper.Decompress(Source, Dest, out BytesWritten, out Adler32);
     }
 
     /// <summary>
     /// Check data for compression by zlib.
     /// </summary>
-    /// <param name="path">The file to check on if it is compressed by zlib.</param>
+    /// <param name="Source">Input stream.</param>
     /// <returns>Returns <see langword="true" /> if data is compressed by zlib, else <see langword="false" />.</returns>
-    /// <exception cref="ArgumentNullException">When <paramref name="path"/> is <see langword="null" /> or <see cref="string.Empty"/>.</exception>
-    public static bool IsCompressedByZlib(string path)
-        => IsCompressedByZlib(File.ReadAllBytes(path));
+    /// <exception cref="ArgumentNullException">When <paramref name="Source"/> is <see langword="null" />.</exception>
+    public static bool IsCompressedByZlib(Span<byte> Source)
+    {
+        if (Source.Length >= 2)
+        {
+            ref var SourceRef = ref MemoryMarshal.GetReference(Source);
+
+            var byte1 = SourceRef;
+
+            var byte2 = Unsafe.Add(ref SourceRef, 1);
+        
+            return byte1 is 0x78 && byte2 is 0x01 or 0x5E or 0x9C or 0xDA;
+        }
+
+        throw new ArgumentNullException(nameof(Source));
+    }
 
     /// <summary>
     /// Check data for compression by zlib.
     /// </summary>
-    /// <param name="data">Input array.</param>
+    /// <param name="Path">The file to check on if it is compressed by zlib.</param>
     /// <returns>Returns <see langword="true" /> if data is compressed by zlib, else <see langword="false" />.</returns>
-    /// <exception cref="ArgumentNullException">When <paramref name="data"/> is <see langword="null" />.</exception>
-    public static bool IsCompressedByZlib(byte[] data)
-        => data == null
-            ? throw new ArgumentNullException(nameof(data))
-            : data.Length >= 2 && data[0] is 0x78 && data[1] is 0x01 or 0x5E or 0x9C or 0xDA;
+    /// <exception cref="ArgumentNullException">When <paramref name="Path"/> is <see langword="null" /> or <see cref="string.Empty"/>.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsCompressedByZlib(string Path)
+        => IsCompressedByZlib(File.ReadAllBytes(Path));
+
+    /// <summary>
+    /// Check data for compression by zlib.
+    /// </summary>
+    /// <param name="Data">Input array.</param>
+    /// <returns>Returns <see langword="true" /> if data is compressed by zlib, else <see langword="false" />.</returns>
+    /// <exception cref="ArgumentNullException">When <paramref name="Data"/> is <see langword="null" />.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsCompressedByZlib(byte[] Data)
+        => IsCompressedByZlib(Data.AsSpan());
 
     // NEW: Zlib version check.
 
@@ -281,16 +118,23 @@ public static class MemoryZlib
     /// <summary>
     /// Gets the Adler32 checksum of the input data at the specified index and length.
     /// </summary>
-    /// <param name="data">The data to checksum.</param>
+    /// <param name="Data">The data to checksum.</param>
     /// <returns>The Adler32 hash of the input data.</returns>
-    public static unsafe ulong ZlibGetAdler32(byte[] data)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ulong ZlibGetAdler32(byte[] Data)
     {
-        fixed (byte* pdata = data)
+        return ZlibGetAdler32(Data.AsSpan());
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ulong ZlibGetAdler32(Span<byte> Data)
+    {
+        fixed (byte* DataPtr = Data)
         {
             return UnsafeNativeMethods.adler32(
                 UnsafeNativeMethods.adler32(0L, null, 0),
-                pdata,
-                (uint)data.Length);
+                DataPtr,
+                (uint) Data.Length);
         }
     }
 }
