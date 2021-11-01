@@ -3,110 +3,138 @@
 // All rights reserved.
 // license: MIT, see LICENSE for more details.
 
+using System.Runtime.CompilerServices;
+
 namespace ZlibSharp;
 
-internal static class ZlibHelper
+internal static unsafe class ZlibHelper
 {
-    internal static unsafe bool InitializeInflate(ref ZStream zs)
+    private static void InitializeInflate(ZStream* streamPtr)
     {
-        fixed (ZStream* pzs = &zs)
-        {
-            if (UnsafeNativeMethods.inflateInit_(
-                pzs,
+        if (UnsafeNativeMethods.inflateInit_(
+                streamPtr,
                 UnsafeNativeMethods.zlibVersion(),
                 sizeof(ZStream)) != ZlibResult.Ok)
-            {
-                throw new NotUnpackableException("inflateInit failed while trying to decompress.");
-            }
-
-            return true;
+        {
+            throw new NotPackableException("inflateInit failed while trying to inflate.");
         }
     }
 
-    internal static unsafe bool InitializeDeflate(ref ZStream zs, ZlibCompressionLevel compressionLevel)
+    private static void InitializeDeflate(ZStream* streamPtr, ZlibCompressionLevel compressionLevel)
     {
-        fixed (ZStream* pzs = &zs)
-        {
-            if (UnsafeNativeMethods.deflateInit_(
-                pzs,
+        if (UnsafeNativeMethods.deflateInit_(
+                streamPtr,
                 compressionLevel,
                 UnsafeNativeMethods.zlibVersion(),
                 sizeof(ZStream)) != ZlibResult.Ok)
+        {
+            throw new NotPackableException("deflateInit failed while trying to deflate.");
+        }
+    }
+
+    internal static unsafe void FinalizeInflate(ZStream* StreamPtr)
+    {
+        if (UnsafeNativeMethods.inflateEnd(StreamPtr) != ZlibResult.Ok)
+        {
+            throw new NotPackableException("inflateEnd failed while trying to inflate.");
+        }
+    }
+
+    internal static void FinalizeDeflate(ZStream* StreamPtr)
+    {
+        if (UnsafeNativeMethods.deflateEnd(StreamPtr) != ZlibResult.Ok)
+        {
+            throw new NotPackableException("deflateEnd failed while trying to deflate.");
+        }
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static uint Compress(Span<byte> Source, Span<byte> Dest, ZlibCompressionLevel CompressionLevel, out uint Adler32)
+    {
+        return Compress(Source, Dest, CompressionLevel, ZlibFlushStrategy.NoFlush, out Adler32);
+    }
+
+    internal static uint Compress(Span<byte> Source, Span<byte> Dest, ZlibCompressionLevel CompressionLevel, ZlibFlushStrategy Flush, out uint Adler32)
+    {
+        ZStream Stream;
+
+        var StreamPtr = &Stream;
+        
+        //We skipped initialization
+        StreamPtr->zalloc = null;
+        StreamPtr->zfree = null;
+        
+        fixed (byte* SourcePtr = Source)
+        fixed (byte* DestPtr = Dest)
+        {
+            InitializeDeflate(StreamPtr, CompressionLevel);
+            
+            StreamPtr->next_in = SourcePtr;
+            StreamPtr->avail_in = (uint) Source.Length;
+            StreamPtr->next_out = DestPtr;
+            StreamPtr->avail_out = (uint) Dest.Length;
+            
+            var Result = UnsafeNativeMethods.deflate(StreamPtr, Flush);
+
+            Adler32 = GetAdler32(StreamPtr);
+
+            FinalizeDeflate(StreamPtr);
+
+            if (Result != ZlibResult.StreamEnd)
             {
-                throw new NotPackableException("deflateInit failed while trying to compress.");
+                throw new NotPackableException($"Inflate Error - ({Result}) {Marshal.PtrToStringUTF8((nint)Stream.msg)}");
             }
 
-            return true;
+            return (uint) Stream.total_out.Value;
         }
     }
 
-    internal static unsafe bool FinalizeInflate(ref ZStream zs)
+    //Decompress returns avail_in, allowing users to reallocate and continue decompressing remaining data
+    //should Dest buffer be under-allocated
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static uint Decompress(Span<byte> Source, Span<byte> Dest, out uint Adler32)
     {
-        fixed (ZStream* pzs = &zs)
+        return Decompress(Source, Dest, ZlibFlushStrategy.NoFlush, out Adler32);
+    }
+    
+    internal static uint Decompress(Span<byte> Source, Span<byte> Dest, ZlibFlushStrategy Flush, out uint Adler32)
+    {
+        ZStream Stream;
+
+        var StreamPtr = &Stream;
+
+        //We skipped initialization
+        StreamPtr->zalloc = null;
+        StreamPtr->zfree = null;
+        
+        fixed (byte* SourcePtr = Source)
+        fixed (byte* DestPtr = Dest)
         {
-            return UnsafeNativeMethods.inflateEnd(pzs) == ZlibResult.Ok;
+            InitializeInflate(StreamPtr);
+            
+            StreamPtr->next_in = SourcePtr;
+            StreamPtr->avail_in = (uint) Source.Length;
+            StreamPtr->next_out = DestPtr;
+            StreamPtr->avail_out = (uint) Dest.Length;
+            
+            var Result = UnsafeNativeMethods.deflate(StreamPtr, Flush);
+
+            Adler32 = GetAdler32(StreamPtr);
+            
+            FinalizeInflate(StreamPtr);
+            
+            if (Result is ZlibResult.StreamEnd or ZlibResult.BufError)
+            {
+                return Stream.avail_in;
+            }
+        
+            throw new NotPackableException($"Inflate Error - ({Result}) {Marshal.PtrToStringUTF8((nint) Stream.msg)}");
         }
     }
 
-    internal static unsafe bool FinalizeDeflate(ref ZStream zs)
+    private static uint GetAdler32(ZStream* StreamPtr)
     {
-        fixed (ZStream* pzs = &zs)
-        {
-            return UnsafeNativeMethods.deflateEnd(pzs) == ZlibResult.Ok;
-        }
-    }
-
-    internal static unsafe ZlibResult Decompress(ref ZStream zs, byte[] source, byte[] dest, ZlibFlushStrategy flush)
-    {
-        ZlibResult ret;
-        fixed (byte* psource = source)
-        fixed (byte* pdest = dest)
-        fixed (ZStream* pzs = &zs)
-        {
-            zs.next_in = psource;
-            zs.avail_in = (uint)source.Length;
-            zs.next_out = pdest;
-            zs.avail_out = (uint)dest.Length;
-            ret = UnsafeNativeMethods.inflate(pzs, flush);
-        }
-
-        if ((ulong)dest.LongLength < zs.total_out.Value)
-        {
-            // error?
-        }
-
-        if (ret != ZlibResult.StreamEnd)
-        {
-            throw new NotUnpackableException($"Exception during zlib decompression: ({ret}) {Marshal.PtrToStringUTF8((nint)zs.msg)}");
-        }
-
-        return ret;
-    }
-
-    internal static unsafe bool Compress(ref ZStream zs, byte[] source, byte[] dest, ZlibFlushStrategy flush)
-    {
-        ZlibResult ret;
-        fixed (byte* psource = source)
-        fixed (byte* pdest = dest)
-        fixed (ZStream* pzs = &zs)
-        {
-            zs.next_in = psource;
-            zs.avail_in = (uint)source.Length;
-            zs.next_out = pdest;
-            zs.avail_out = (uint)dest.Length;
-            ret = UnsafeNativeMethods.deflate(pzs, flush);
-        }
-
-        if ((ulong)dest.LongLength < zs.total_out.Value)
-        {
-            // error?
-        }
-
-        if (ret is not ZlibResult.Ok and not ZlibResult.StreamEnd)
-        {
-            throw new NotPackableException($"deflating: ({ret}) {Marshal.PtrToStringUTF8((nint)zs.msg)}");
-        }
-
-        return ret is ZlibResult.Ok or ZlibResult.StreamEnd;
+        return (uint) (StreamPtr->adler.Value & 0xffff);
     }
 }
