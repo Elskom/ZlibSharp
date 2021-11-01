@@ -3,58 +3,50 @@
 // All rights reserved.
 // license: MIT, see LICENSE for more details.
 
-using System.Runtime.CompilerServices;
-
 namespace ZlibSharp;
 
 internal static unsafe class ZlibHelper
 {
-    private static void InitializeInflate(ZStream* streamPtr)
+    private static void InitializeInflate(ZStream* StreamPtr)
     {
-        if (UnsafeNativeMethods.inflateInit_(
-                streamPtr,
-                UnsafeNativeMethods.zlibVersion(),
-                sizeof(ZStream)) != ZlibResult.Ok)
+        var Result = UnsafeNativeMethods.inflateInit_(StreamPtr, UnsafeNativeMethods.zlibVersion(), sizeof(ZStream));
+        
+        if (Result != ZlibResult.Ok)
         {
-            throw new NotPackableException("inflateInit failed while trying to inflate.");
+            throw new NotPackableException($"{nameof(InitializeInflate)} failed - ({Result}) {Marshal.PtrToStringUTF8((nint) StreamPtr->msg)}");        
         }
     }
 
-    private static void InitializeDeflate(ZStream* streamPtr, ZlibCompressionLevel compressionLevel)
+    private static void InitializeDeflate(ZStream* StreamPtr, ZlibCompressionLevel CompressionLevel)
     {
-        if (UnsafeNativeMethods.deflateInit_(
-                streamPtr,
-                compressionLevel,
-                UnsafeNativeMethods.zlibVersion(),
-                sizeof(ZStream)) != ZlibResult.Ok)
+        var Result = UnsafeNativeMethods.deflateInit_(StreamPtr, CompressionLevel, UnsafeNativeMethods.zlibVersion(), sizeof(ZStream));
+        
+        if (Result != ZlibResult.Ok)
         {
-            throw new NotPackableException("deflateInit failed while trying to deflate.");
+            throw new NotPackableException($"{nameof(InitializeDeflate)} failed - ({Result}) {Marshal.PtrToStringUTF8((nint) StreamPtr->msg)}");        
         }
     }
 
-    internal static unsafe void FinalizeInflate(ZStream* StreamPtr)
+    internal static void InflateEnd(ZStream* StreamPtr)
     {
-        if (UnsafeNativeMethods.inflateEnd(StreamPtr) != ZlibResult.Ok)
+        var Result = UnsafeNativeMethods.inflateEnd(StreamPtr);
+        
+        if (Result != ZlibResult.Ok)
         {
-            throw new NotPackableException("inflateEnd failed while trying to inflate.");
+            throw new NotPackableException($"{nameof(InflateEnd)} failed - ({Result}) {Marshal.PtrToStringUTF8((nint) StreamPtr->msg)}");
         }
     }
 
-    internal static void FinalizeDeflate(ZStream* StreamPtr)
+    private static void DeflateEnd(ZStream* StreamPtr)
     {
-        if (UnsafeNativeMethods.deflateEnd(StreamPtr) != ZlibResult.Ok)
+        var Result = UnsafeNativeMethods.deflateEnd(StreamPtr);
+        
+        if (Result != ZlibResult.Ok)
         {
-            throw new NotPackableException("deflateEnd failed while trying to deflate.");
+            throw new NotPackableException($"{nameof(DeflateEnd)} failed - ({Result}) {Marshal.PtrToStringUTF8((nint) StreamPtr->msg)}");
         }
     }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static uint Compress(Span<byte> Source, Span<byte> Dest, ZlibCompressionLevel CompressionLevel, out uint Adler32)
-    {
-        return Compress(Source, Dest, CompressionLevel, ZlibFlushStrategy.NoFlush, out Adler32);
-    }
-
-    internal static uint Compress(Span<byte> Source, Span<byte> Dest, ZlibCompressionLevel CompressionLevel, ZlibFlushStrategy Flush, out uint Adler32)
     {
         ZStream Stream;
 
@@ -73,17 +65,20 @@ internal static unsafe class ZlibHelper
             StreamPtr->avail_in = (uint) Source.Length;
             StreamPtr->next_out = DestPtr;
             StreamPtr->avail_out = (uint) Dest.Length;
-            
-            var Result = UnsafeNativeMethods.deflate(StreamPtr, Flush);
+
+            ZlibResult Result;
+
+            while (UnsafeNativeMethods.deflate(StreamPtr, ZlibFlushStrategy.NoFlush) == ZlibResult.Ok)
+            {
+                if (StreamPtr->avail_in == 0)
+                {
+                    UnsafeNativeMethods.deflate(StreamPtr, ZlibFlushStrategy.Finish);
+                }
+            };
 
             Adler32 = GetAdler32(StreamPtr);
 
-            FinalizeDeflate(StreamPtr);
-
-            if (Result != ZlibResult.StreamEnd)
-            {
-                throw new NotPackableException($"Inflate Error - ({Result}) {Marshal.PtrToStringUTF8((nint)Stream.msg)}");
-            }
+            DeflateEnd(StreamPtr);
 
             return (uint) Stream.total_out.Value;
         }
@@ -91,14 +86,8 @@ internal static unsafe class ZlibHelper
 
     //Decompress returns avail_in, allowing users to reallocate and continue decompressing remaining data
     //should Dest buffer be under-allocated
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
     internal static uint Decompress(Span<byte> Source, Span<byte> Dest, out uint Adler32)
-    {
-        return Decompress(Source, Dest, ZlibFlushStrategy.NoFlush, out Adler32);
-    }
-    
-    internal static uint Decompress(Span<byte> Source, Span<byte> Dest, ZlibFlushStrategy Flush, out uint Adler32)
     {
         ZStream Stream;
 
@@ -117,19 +106,20 @@ internal static unsafe class ZlibHelper
             StreamPtr->avail_in = (uint) Source.Length;
             StreamPtr->next_out = DestPtr;
             StreamPtr->avail_out = (uint) Dest.Length;
-            
-            var Result = UnsafeNativeMethods.deflate(StreamPtr, Flush);
 
+            while (UnsafeNativeMethods.inflate(StreamPtr, ZlibFlushStrategy.NoFlush) == ZlibResult.Ok)
+            {
+                if (StreamPtr->avail_in == 0)
+                {
+                    UnsafeNativeMethods.inflate(StreamPtr, ZlibFlushStrategy.Finish);
+                }
+            }
+            
             Adler32 = GetAdler32(StreamPtr);
             
-            FinalizeInflate(StreamPtr);
-            
-            if (Result is ZlibResult.StreamEnd or ZlibResult.BufError)
-            {
-                return Stream.avail_in;
-            }
-        
-            throw new NotPackableException($"Inflate Error - ({Result}) {Marshal.PtrToStringUTF8((nint) Stream.msg)}");
+            InflateEnd(StreamPtr);
+
+            return StreamPtr->avail_in;
         }
     }
 
