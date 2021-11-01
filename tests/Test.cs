@@ -34,8 +34,6 @@ public class Test
     [Fact]
     public void DecompressionWorks()
     {
-        //FakeConsole.WriteLine($"Length {CompressLength}");
-
         MemoryZlib.Decompress(SourceStringCompressed, SourceBuffer, out _).Should().Be(0);
 
         SourceBuffer.Should().Equal(SourceString);
