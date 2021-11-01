@@ -7,126 +7,150 @@ namespace ZlibSharp;
 
 internal static unsafe class ZlibHelper
 {
-    private static void InitializeInflate(ZStream* StreamPtr)
-    {
-        var Result = UnsafeNativeMethods.inflateInit_(StreamPtr, UnsafeNativeMethods.zlibVersion(), sizeof(ZStream));
-        
-        if (Result != ZlibResult.Ok)
-        {
-            throw new NotPackableException($"{nameof(InitializeInflate)} failed - ({Result}) {Marshal.PtrToStringUTF8((nint) StreamPtr->msg)}");        
-        }
-    }
+    private static bool zlibResolverAdded;
 
-    private static void InitializeDeflate(ZStream* StreamPtr, ZlibCompressionLevel CompressionLevel)
+    internal static uint Compress(ReadOnlySpan<byte> source, Span<byte> dest, ZlibCompressionLevel compressionLevel, out uint adler32)
     {
-        var Result = UnsafeNativeMethods.deflateInit_(StreamPtr, CompressionLevel, UnsafeNativeMethods.zlibVersion(), sizeof(ZStream));
-        
-        if (Result != ZlibResult.Ok)
-        {
-            throw new NotPackableException($"{nameof(InitializeDeflate)} failed - ({Result}) {Marshal.PtrToStringUTF8((nint) StreamPtr->msg)}");        
-        }
-    }
+        ZStream stream;
+        var streamPtr = &stream;
 
-    internal static void InflateEnd(ZStream* StreamPtr)
-    {
-        var Result = UnsafeNativeMethods.inflateEnd(StreamPtr);
-        
-        if (Result != ZlibResult.Ok)
-        {
-            throw new NotPackableException($"{nameof(InflateEnd)} failed - ({Result}) {Marshal.PtrToStringUTF8((nint) StreamPtr->msg)}");
-        }
-    }
-
-    private static void DeflateEnd(ZStream* StreamPtr)
-    {
-        var Result = UnsafeNativeMethods.deflateEnd(StreamPtr);
-        
-        if (Result != ZlibResult.Ok)
-        {
-            throw new NotPackableException($"{nameof(DeflateEnd)} failed - ({Result}) {Marshal.PtrToStringUTF8((nint) StreamPtr->msg)}");
-        }
-    }
-    internal static uint Compress(Span<byte> Source, Span<byte> Dest, ZlibCompressionLevel CompressionLevel, out uint Adler32)
-    {
-        ZStream Stream;
-
-        var StreamPtr = &Stream;
-        
         //We skipped initialization
-        StreamPtr->zalloc = null;
-        StreamPtr->zfree = null;
-        
-        fixed (byte* SourcePtr = Source)
-        fixed (byte* DestPtr = Dest)
+        streamPtr->zalloc = null;
+        streamPtr->zfree = null;
+        fixed (byte* sourcePtr = source)
+        fixed (byte* destPtr = dest)
         {
-            InitializeDeflate(StreamPtr, CompressionLevel);
-            
-            StreamPtr->next_in = SourcePtr;
-            StreamPtr->avail_in = (uint) Source.Length;
-            StreamPtr->next_out = DestPtr;
-            StreamPtr->avail_out = (uint) Dest.Length;
-
-            ZlibResult Result;
-
-            while (UnsafeNativeMethods.deflate(StreamPtr, ZlibFlushStrategy.NoFlush) == ZlibResult.Ok)
+            InitializeDeflate(streamPtr, compressionLevel);
+            streamPtr->next_in = sourcePtr;
+            streamPtr->avail_in = (uint)source.Length;
+            streamPtr->next_out = destPtr;
+            streamPtr->avail_out = (uint)dest.Length;
+            while (UnsafeNativeMethods.deflate(streamPtr, ZlibFlushStrategy.NoFlush) == ZlibResult.Ok)
             {
-                if (StreamPtr->avail_in == 0)
+                if (streamPtr->avail_in == 0)
                 {
-                    UnsafeNativeMethods.deflate(StreamPtr, ZlibFlushStrategy.Finish);
+                    UnsafeNativeMethods.deflate(streamPtr, ZlibFlushStrategy.Finish);
                 }
-            };
+            }
 
-            Adler32 = GetAdler32(StreamPtr);
-
-            DeflateEnd(StreamPtr);
-
-            return (uint) Stream.total_out.Value;
+            adler32 = GetAdler32(streamPtr);
+            DeflateEnd(streamPtr);
+            return (uint)stream.total_out.Value;
         }
     }
 
     //Decompress returns avail_in, allowing users to reallocate and continue decompressing remaining data
     //should Dest buffer be under-allocated
-
-    internal static uint Decompress(Span<byte> Source, Span<byte> Dest, out uint BytesWritten, out uint Adler32)
+    internal static uint Decompress(ReadOnlySpan<byte> source, Span<byte> dest, out uint bytesWritten, out uint adler32)
     {
-        ZStream Stream;
+        ZStream stream;
+        var streamPtr = &stream;
 
-        var StreamPtr = &Stream;
-
-        //We skipped initialization
-        StreamPtr->zalloc = null;
-        StreamPtr->zfree = null;
-        
-        fixed (byte* SourcePtr = Source)
-        fixed (byte* DestPtr = Dest)
+        // We skipped initialization
+        streamPtr->zalloc = null;
+        streamPtr->zfree = null;
+        fixed (byte* sourcePtr = source)
+        fixed (byte* destPtr = dest)
         {
-            InitializeInflate(StreamPtr);
-            
-            StreamPtr->next_in = SourcePtr;
-            StreamPtr->avail_in = (uint) Source.Length;
-            StreamPtr->next_out = DestPtr;
-            StreamPtr->avail_out = (uint) Dest.Length;
-
-            while (UnsafeNativeMethods.inflate(StreamPtr, ZlibFlushStrategy.NoFlush) == ZlibResult.Ok)
+            InitializeInflate(streamPtr);
+            streamPtr->next_in = sourcePtr;
+            streamPtr->avail_in = (uint)source.Length;
+            streamPtr->next_out = destPtr;
+            streamPtr->avail_out = (uint)dest.Length;
+            while (UnsafeNativeMethods.inflate(streamPtr, ZlibFlushStrategy.NoFlush) == ZlibResult.Ok)
             {
-                if (StreamPtr->avail_in == 0)
+                if (streamPtr->avail_in == 0)
                 {
-                    UnsafeNativeMethods.inflate(StreamPtr, ZlibFlushStrategy.Finish);
+                    UnsafeNativeMethods.inflate(streamPtr, ZlibFlushStrategy.Finish);
                 }
             }
 
-            BytesWritten = (uint) StreamPtr->total_out.Value;
-            
-            Adler32 = GetAdler32(StreamPtr);
-
-            InflateEnd(StreamPtr);
-
-            return StreamPtr->avail_in;
+            bytesWritten = (uint)streamPtr->total_out.Value;
+            adler32 = GetAdler32(streamPtr);
+            InflateEnd(streamPtr);
+            return streamPtr->avail_in;
         }
     }
 
-    private static uint GetAdler32(ZStream* StreamPtr)
+    private static void InitializeInflate(ZStream* streamPtr)
     {
-        return (uint) (StreamPtr->adler.Value & 0xffff);
+        if (!zlibResolverAdded)
+        {
+            AddNativeResolver();
+        }
+
+        var result = UnsafeNativeMethods.inflateInit_(streamPtr, UnsafeNativeMethods.zlibVersion(), sizeof(ZStream));
+        if (result != ZlibResult.Ok)
+        {
+            throw new NotUnpackableException($"{nameof(InitializeInflate)} failed - ({result}) {Marshal.PtrToStringUTF8((nint)streamPtr->msg)}");        
+        }
+    }
+
+    private static void InitializeDeflate(ZStream* streamPtr, ZlibCompressionLevel compressionLevel)
+    {
+        if (!zlibResolverAdded)
+        {
+            AddNativeResolver();
+        }
+
+        var result = UnsafeNativeMethods.deflateInit_(streamPtr, compressionLevel, UnsafeNativeMethods.zlibVersion(), sizeof(ZStream));
+        if (result != ZlibResult.Ok)
+        {
+            throw new NotPackableException($"{nameof(InitializeDeflate)} failed - ({result}) {Marshal.PtrToStringUTF8((nint)streamPtr->msg)}");        
+        }
+    }
+
+    private static void InflateEnd(ZStream* streamPtr)
+    {
+        var result = UnsafeNativeMethods.inflateEnd(streamPtr);
+        if (result != ZlibResult.Ok)
+        {
+            throw new NotUnpackableException($"{nameof(InflateEnd)} failed - ({result}) {Marshal.PtrToStringUTF8((nint)streamPtr->msg)}");
+        }
+    }
+
+    private static void DeflateEnd(ZStream* streamPtr)
+    {
+        var result = UnsafeNativeMethods.deflateEnd(streamPtr);
+        if (result != ZlibResult.Ok)
+        {
+            throw new NotPackableException($"{nameof(DeflateEnd)} failed - ({result}) {Marshal.PtrToStringUTF8((nint)streamPtr->msg)}");
+        }
+    }
+
+    private static uint GetAdler32(ZStream* streamPtr)
+        => (uint)(streamPtr->adler.Value & 0xffff);
+
+    private static void AddNativeResolver()
+    {
+        NativeLibrary.SetDllImportResolver(typeof(ZlibHelper).Assembly,
+            (name, assembly, path) =>
+            {
+                nint handle = IntPtr.Zero;
+
+                // check if name is zlib and the operating system is not Windows.
+                // Otherwise, fallback to default import resolver.
+                if (name == "zlib" && !OperatingSystem.IsWindows())
+                {
+                    if (OperatingSystem.IsLinux() || OperatingSystem.IsFreeBSD())
+                    {
+                        // require zlib from "sudo apt install zlib1g" or
+                        // "sudo apt install zlib1g-dev".
+                        _ = NativeLibrary.TryLoad($"libz.so.{MemoryZlib.NativeZlibVersion}", assembly, path, out handle);
+                    }
+                    else if (OperatingSystem.IsMacOS() || OperatingSystem.IsMacCatalyst())
+                    {
+                        // require homebrew zlib.
+                        _ = NativeLibrary.TryLoad($"/usr/local/Cellar/zlib/{MemoryZlib.NativeZlibVersion}/lib/libz.{MemoryZlib.NativeZlibVersion}.dylib", out handle);
+                    }
+                    else
+                    {
+                        throw new NotSupportedException("Zlib is probably not supported on mobile devices.");
+                    }
+                }
+
+                return handle;
+            });
+        zlibResolverAdded = true;
     }
 }

@@ -1,81 +1,58 @@
-using System.IO.Compression;
-using System.Runtime.InteropServices;
-using FluentAssertions;
-using Xunit;
-using Xunit.Abstractions;
+// Copyright (c) 2021, Els_kom org.
+// https://github.com/Elskom/
+// All rights reserved.
+// license: MIT, see LICENSE for more details.
 
 namespace ZlibSharp.Tests;
 
 public class Test
 {
-    private readonly ITestOutputHelper FakeConsole;
-    
-    private readonly byte[] SourceString, SourceStringCompressed, SourceBuffer;
+    private readonly byte[] sourceString, sourceStringCompressed, sourceBuffer;
+    private readonly int lengthOfCompressed;
 
-    private readonly int LengthOfCompressed;
-    
-    public Test(ITestOutputHelper fakeConsole)
+    public Test()
     {
-        FakeConsole = fakeConsole;
-        
-        SourceString = File.ReadAllBytes("SourceText.txt");
-
-        var DestBuffer = new byte[SourceString.Length];
-        
-        LengthOfCompressed = (int) MemoryZlib.Compress(SourceString, DestBuffer);
-
-        SourceStringCompressed = new byte[LengthOfCompressed];
-        
-        DestBuffer.AsSpan(0, LengthOfCompressed).CopyTo(SourceStringCompressed);
-
-        SourceBuffer = new byte[SourceString.Length];
+        sourceString = File.ReadAllBytes("SourceText.txt");
+        var destBuffer = new byte[sourceString.Length];
+        lengthOfCompressed = (int)MemoryZlib.Compress(sourceString, destBuffer);
+        sourceStringCompressed = new byte[lengthOfCompressed];
+        destBuffer.AsSpan(0, lengthOfCompressed).CopyTo(sourceStringCompressed);
+        sourceBuffer = new byte[sourceString.Length];
     }
-    
+
     [Fact]
     public void DecompressionWorks()
     {
-        MemoryZlib.Decompress(SourceStringCompressed, SourceBuffer, out _).Should().Be(0);
-
-        SourceBuffer.Should().Equal(SourceString);
+        MemoryZlib.Decompress(sourceStringCompressed, sourceBuffer, out _).Should().Be(0);
+        sourceBuffer.Should().Equal(sourceString);
     }
-    
+
     [Fact]
     public void DecompressionToUnderAllocatedBufferReturnsNonZeroValue()
     {
-        const int UndersizedBufferLength = 69;
-
-        UndersizedBufferLength.Should().BeLessThan(SourceBuffer.Length);
-        
-        var UndersizedDestBuffer = new byte[UndersizedBufferLength];
-        
-        MemoryZlib.Decompress(SourceStringCompressed, UndersizedDestBuffer, out var BytesWritten).Should().NotBe(0);
-
-        BytesWritten.Should().Be(UndersizedBufferLength);
+        const int undersizedBufferLength = 69;
+        undersizedBufferLength.Should().BeLessThan(sourceBuffer.Length);
+        var undersizedDestBuffer = new byte[undersizedBufferLength];
+        MemoryZlib.Decompress(sourceStringCompressed, undersizedDestBuffer, out var bytesWritten).Should().NotBe(0);
+        bytesWritten.Should().Be(undersizedBufferLength);
     }
-    
+
     [Fact]
     public void CompressionToUnderAllocatedBufferReturnsNonZeroValue()
     {
-        const int UndersizedBufferLength = 69;
-
-        UndersizedBufferLength.Should().BeLessThan(LengthOfCompressed);
-        
-        var UndersizedDestBuffer = new byte[UndersizedBufferLength];
-        
-        MemoryZlib.Compress(SourceStringCompressed, UndersizedDestBuffer).Should().NotBe(0);
+        const int undersizedBufferLength = 69;
+        undersizedBufferLength.Should().BeLessThan(lengthOfCompressed);
+        var undersizedDestBuffer = new byte[undersizedBufferLength];
+        MemoryZlib.Compress(sourceStringCompressed, undersizedDestBuffer).Should().NotBe(0);
     }
-    
+
     [Fact]
     public void DecompressionToOverAllocatedBufferShouldHaveBytesWrittenEqualToSourceStringLength()
     {
-        const uint OversizeBy = 69;
-
-        var SourceLength = (uint) SourceString.Length;
-        
-        var OversizedDestBuffer = new byte[SourceLength + OversizeBy];
-        
-        MemoryZlib.Decompress(SourceStringCompressed, OversizedDestBuffer, out var BytesWritten).Should().Be(0);
-
-        BytesWritten.Should().Be(SourceLength);
+        const uint oversizeBy = 69;
+        var sourceLength = (uint)sourceString.Length;
+        var oversizedDestBuffer = new byte[sourceLength + oversizeBy];
+        MemoryZlib.Decompress(sourceStringCompressed, oversizedDestBuffer, out var bytesWritten).Should().Be(0);
+        bytesWritten.Should().Be(sourceLength);
     }
 }

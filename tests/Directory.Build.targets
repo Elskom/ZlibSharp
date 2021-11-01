@@ -1,0 +1,11 @@
+<Project>
+
+  <ItemGroup>
+    <None Include="SourceText.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <Using Include="FluentAssertions" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>
