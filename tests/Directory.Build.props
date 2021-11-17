@@ -4,6 +4,9 @@
 
   <PropertyGroup>
     <IsPackable>false</IsPackable>
+    <CollectCoverage>true</CollectCoverage>
+    <CoverletOutputFormat>opencover</CoverletOutputFormat>
+    <CoverletOutput>$(MSBuildThisFileDirectory)coverage.codacy.opencover.xml</CoverletOutput>
   </PropertyGroup>
 
 </Project>

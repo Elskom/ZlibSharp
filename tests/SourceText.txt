@@ -1,0 +1,164 @@
+Wouldn't that mean new memory is allocated? (edited)
+
+Magic Mage — Today at 11:44 AM
+that is because I am not sure if that is an error case or not.
+[11:45 AM]
+it may more may not represent extra memory though.
+[11:45 AM]
+that is why I do not throw in case.
+
+TrumpMcDonaldz — Today at 11:45 AM
+If the total out value is greater than the supplied dest
+[11:45 AM]
+Its definitely out of bounds
+[11:45 AM]
+Maybe add an interface to handle that?
+
+Magic Mage — Today at 11:45 AM
+hmm
+
+TrumpMcDonaldz — Today at 11:46 AM
+I think it would allocate new native memory for us
+[11:46 AM]
+Not too sure, though
+
+Magic Mage — Today at 11:46 AM
+no
+
+TrumpMcDonaldz — Today at 11:46 AM
+And I think calling into deflateend deallocates it
+[11:46 AM]
+Oh?
+
+Magic Mage — Today at 11:46 AM
+I mean it might.
+[11:46 AM]
+but I do not think it will.
+
+TrumpMcDonaldz — Today at 11:46 AM
+It does, which is why there's zalloc and zfree, no?
+[11:46 AM]
+Else I don't get why they're a thing
+[11:46 AM]
+Clearly I need to do more research
+[11:49 AM]
+Appears not
+[11:49 AM]
+It doesn't overrun the buffer, apparently
+
+TrumpMcDonaldz — Today at 11:58 AM
+I think we are supposed to check avail_in
+[11:58 AM]
+If its not zero, then probably the dest didn't have enough memory
+[11:58 AM]
+
+
+Magic Mage — Today at 12:00 PM
+I think avail_in is for source. (edited)
+[12:01 PM]
+but you are right, perhaps that is the proper check.
+
+TrumpMcDonaldz — Today at 12:01 PM
+Actually nope
+[12:02 PM]
+ZlibResult.MemError
+[12:02 PM]
+uncompress returns Z_OK if success, Z_MEM_ERROR if there was not enough memory, Z_BUF_ERROR if there was not enough room in the output buffer, or Z_DATA_ERROR if the input data was corrupted or incomplete
+
+Magic Mage — Today at 12:03 PM
+so I was right
+[12:03 PM]
+in that dest might have more data than total_out.
+
+TrumpMcDonaldz — Today at 12:03 PM
+No
+[12:03 PM]
+It doesn't overrun the output buffer (edited)
+[12:03 PM]
+It just writes as much as it can
+
+Magic Mage — Today at 12:04 PM
+no I mean if the managed code allocated more than what zlib needed.
+
+TrumpMcDonaldz — Today at 12:04 PM
+No it wouldn't have more data
+[12:05 PM]
+But dest.Length can be greater than total_out
+[12:06 PM]
+I have no idea what is the diff between avail_out and total_out
+[12:06 PM]
+
+[12:07 PM]
+Nvm Im dumb
+[12:08 PM]
+avail_out is basically dest.Length
+[12:08 PM]
+So total_out can never be greater than avail_out
+[12:08 PM]
+Because it doesn't overrun the buffer
+
+Magic Mage — Today at 12:10 PM
+oh
+
+TrumpMcDonaldz — Today at 12:13 PM
+I think the API needs a rewrite
+[12:13 PM]
+Returning an int, specifying how much bytes of data have yet to be processed
+[12:13 PM]
+So if the dest buffer is sufficient, it returns 0
+
+TrumpMcDonaldz — Today at 1:35 PM
+So
+[1:35 PM]
+I rewrote most of the API
+[1:35 PM]
+Do you want me to make a PR?
+[1:35 PM]
+I found some bugs I think
+
+Magic Mage — Today at 1:35 PM
+and you tested it?
+
+TrumpMcDonaldz — Today at 1:36 PM
+Nope
+[1:36 PM]
+I have no idea how to write a good unit test
+
+Magic Mage — Today at 1:36 PM
+I would test it before committing and making a PR.
+
+TrumpMcDonaldz — Today at 1:36 PM
+True true
+
+Magic Mage — Today at 1:36 PM
+did you see the test project?
+
+TrumpMcDonaldz — Today at 1:36 PM
+Oh there's one? Aight
+[1:36 PM]
+Bro its blank
+[1:36 PM]
+
+
+Magic Mage — Today at 1:36 PM
+yep
+
+TrumpMcDonaldz — Today at 1:37 PM
+I suppose I'd attempt to compress and decompress data myself?
+
+Magic Mage — Today at 1:37 PM
+it's because I lack test data to compress and then also decompress and verify (to test compression and decompression)
+[1:37 PM]
+I would recommend finding some resources to use with the unit tests
+
+TrumpMcDonaldz — Today at 1:37 PM
+Yeah I don't have test data either
+[1:37 PM]
+But Imma just copy and paste this whole chat
+
+Magic Mage — Today at 1:37 PM
+stuff not copyrighted.
+
+TrumpMcDonaldz — Today at 1:37 PM
+And use it as input data
+[1:38 PM]

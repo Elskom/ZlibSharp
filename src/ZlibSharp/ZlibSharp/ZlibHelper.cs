@@ -5,108 +5,152 @@
 
 namespace ZlibSharp;
 
-internal static class ZlibHelper
+internal static unsafe class ZlibHelper
 {
-    internal static unsafe bool InitializeInflate(ref ZStream zs)
+    private static bool zlibResolverAdded;
+
+    internal static uint Compress(ReadOnlySpan<byte> source, Span<byte> dest, ZlibCompressionLevel compressionLevel, out uint adler32)
     {
-        fixed (ZStream* pzs = &zs)
+        ZStream stream;
+        var streamPtr = &stream;
+
+        //We skipped initialization
+        streamPtr->zalloc = null;
+        streamPtr->zfree = null;
+        fixed (byte* sourcePtr = source)
+        fixed (byte* destPtr = dest)
         {
-            if (UnsafeNativeMethods.inflateInit_(
-                pzs,
-                UnsafeNativeMethods.zlibVersion(),
-                sizeof(ZStream)) != ZlibResult.Ok)
+            InitializeDeflate(streamPtr, compressionLevel);
+            streamPtr->next_in = sourcePtr;
+            streamPtr->avail_in = (uint)source.Length;
+            streamPtr->next_out = destPtr;
+            streamPtr->avail_out = (uint)dest.Length;
+            while (UnsafeNativeMethods.deflate(streamPtr, ZlibFlushStrategy.NoFlush) == ZlibResult.Ok)
             {
-                throw new NotUnpackableException("inflateInit failed while trying to decompress.");
+                if (streamPtr->avail_in == 0)
+                {
+                    UnsafeNativeMethods.deflate(streamPtr, ZlibFlushStrategy.Finish);
+                }
             }
 
-            return true;
+            adler32 = GetAdler32(streamPtr);
+            DeflateEnd(streamPtr);
+            return (uint)stream.total_out.Value;
         }
     }
 
-    internal static unsafe bool InitializeDeflate(ref ZStream zs, ZlibCompressionLevel compressionLevel)
+    //Decompress returns avail_in, allowing users to reallocate and continue decompressing remaining data
+    //should Dest buffer be under-allocated
+    internal static uint Decompress(ReadOnlySpan<byte> source, Span<byte> dest, out uint bytesWritten, out uint adler32)
     {
-        fixed (ZStream* pzs = &zs)
+        ZStream stream;
+        var streamPtr = &stream;
+
+        // We skipped initialization
+        streamPtr->zalloc = null;
+        streamPtr->zfree = null;
+        fixed (byte* sourcePtr = source)
+        fixed (byte* destPtr = dest)
         {
-            if (UnsafeNativeMethods.deflateInit_(
-                pzs,
-                compressionLevel,
-                UnsafeNativeMethods.zlibVersion(),
-                sizeof(ZStream)) != ZlibResult.Ok)
+            InitializeInflate(streamPtr);
+            streamPtr->next_in = sourcePtr;
+            streamPtr->avail_in = (uint)source.Length;
+            streamPtr->next_out = destPtr;
+            streamPtr->avail_out = (uint)dest.Length;
+            while (UnsafeNativeMethods.inflate(streamPtr, ZlibFlushStrategy.NoFlush) == ZlibResult.Ok)
             {
-                throw new NotPackableException("deflateInit failed while trying to compress.");
+                if (streamPtr->avail_in == 0)
+                {
+                    UnsafeNativeMethods.inflate(streamPtr, ZlibFlushStrategy.Finish);
+                }
             }
 
-            return true;
+            bytesWritten = (uint)streamPtr->total_out.Value;
+            adler32 = GetAdler32(streamPtr);
+            InflateEnd(streamPtr);
+            return streamPtr->avail_in;
         }
     }
 
-    internal static unsafe bool FinalizeInflate(ref ZStream zs)
+    private static void InitializeInflate(ZStream* streamPtr)
     {
-        fixed (ZStream* pzs = &zs)
+        if (!zlibResolverAdded)
         {
-            return UnsafeNativeMethods.inflateEnd(pzs) == ZlibResult.Ok;
+            AddNativeResolver();
+        }
+
+        var result = UnsafeNativeMethods.inflateInit_(streamPtr, UnsafeNativeMethods.zlibVersion(), sizeof(ZStream));
+        if (result != ZlibResult.Ok)
+        {
+            throw new NotUnpackableException($"{nameof(InitializeInflate)} failed - ({result}) {Marshal.PtrToStringUTF8((nint)streamPtr->msg)}");        
         }
     }
 
-    internal static unsafe bool FinalizeDeflate(ref ZStream zs)
+    private static void InitializeDeflate(ZStream* streamPtr, ZlibCompressionLevel compressionLevel)
     {
-        fixed (ZStream* pzs = &zs)
+        if (!zlibResolverAdded)
         {
-            return UnsafeNativeMethods.deflateEnd(pzs) == ZlibResult.Ok;
+            AddNativeResolver();
+        }
+
+        var result = UnsafeNativeMethods.deflateInit_(streamPtr, compressionLevel, UnsafeNativeMethods.zlibVersion(), sizeof(ZStream));
+        if (result != ZlibResult.Ok)
+        {
+            throw new NotPackableException($"{nameof(InitializeDeflate)} failed - ({result}) {Marshal.PtrToStringUTF8((nint)streamPtr->msg)}");        
         }
     }
 
-    internal static unsafe ZlibResult Decompress(ref ZStream zs, ref byte[] dest, ref byte[] source, ZlibFlushStrategy flush)
+    private static void InflateEnd(ZStream* streamPtr)
     {
-        ZlibResult ret;
-        fixed (byte* psource = source)
-        fixed (byte* pdest = dest)
-        fixed (ZStream* pzs = &zs)
+        var result = UnsafeNativeMethods.inflateEnd(streamPtr);
+        if (result != ZlibResult.Ok)
         {
-            zs.next_in = psource;
-            zs.avail_in = (uint)source.Length;
-            zs.next_out = pdest;
-            zs.avail_out = (uint)dest.Length;
-            ret = UnsafeNativeMethods.inflate(pzs, flush);
+            throw new NotUnpackableException($"{nameof(InflateEnd)} failed - ({result}) {Marshal.PtrToStringUTF8((nint)streamPtr->msg)}");
         }
-
-        if ((ulong)dest.LongLength < zs.total_out.Value)
-        {
-            // error?
-        }
-
-        if (ret != ZlibResult.StreamEnd)
-        {
-            throw new NotUnpackableException($"Exception during zlib decompression: ({ret}) {Marshal.PtrToStringUTF8((nint)zs.msg)}");
-        }
-
-        return ret;
     }
 
-    internal static unsafe bool Compress(ref ZStream zs, ref byte[] dest, ref byte[] source, ZlibFlushStrategy flush)
+    private static void DeflateEnd(ZStream* streamPtr)
     {
-        ZlibResult ret;
-        fixed (byte* psource = source)
-        fixed (byte* pdest = dest)
-        fixed (ZStream* pzs = &zs)
+        var result = UnsafeNativeMethods.deflateEnd(streamPtr);
+        if (result != ZlibResult.Ok)
         {
-            zs.next_in = psource;
-            zs.avail_in = (uint)source.Length;
-            zs.next_out = pdest;
-            zs.avail_out = (uint)dest.Length;
-            ret = UnsafeNativeMethods.deflate(pzs, flush);
+            throw new NotPackableException($"{nameof(DeflateEnd)} failed - ({result}) {Marshal.PtrToStringUTF8((nint)streamPtr->msg)}");
         }
+    }
 
-        if ((ulong)dest.LongLength < zs.total_out.Value)
-        {
-            // error?
-        }
+    private static uint GetAdler32(ZStream* streamPtr)
+        => (uint)(streamPtr->adler.Value & 0xffff);
 
-        if (ret is not ZlibResult.Ok and not ZlibResult.StreamEnd)
-        {
-            throw new NotPackableException($"deflating: ({ret}) {Marshal.PtrToStringUTF8((nint)zs.msg)}");
-        }
+    private static void AddNativeResolver()
+    {
+        NativeLibrary.SetDllImportResolver(typeof(ZlibHelper).Assembly,
+            (name, assembly, path) =>
+            {
+                nint handle = IntPtr.Zero;
 
-        return ret is ZlibResult.Ok or ZlibResult.StreamEnd;
+                // check if name is zlib and the operating system is not Windows.
+                // Otherwise, fallback to default import resolver.
+                if (name == "zlib" && !OperatingSystem.IsWindows())
+                {
+                    if (OperatingSystem.IsLinux() || OperatingSystem.IsFreeBSD())
+                    {
+                        // require zlib from "sudo apt install zlib1g" or
+                        // "sudo apt install zlib1g-dev".
+                        _ = NativeLibrary.TryLoad($"libz.so.{MemoryZlib.NativeZlibVersion}", assembly, path, out handle);
+                    }
+                    else if (OperatingSystem.IsMacOS() || OperatingSystem.IsMacCatalyst())
+                    {
+                        // require homebrew zlib.
+                        _ = NativeLibrary.TryLoad($"/usr/local/Cellar/zlib/{MemoryZlib.NativeZlibVersion}/lib/libz.{MemoryZlib.NativeZlibVersion}.dylib", out handle);
+                    }
+                    else
+                    {
+                        throw new NotSupportedException("Zlib is probably not supported on mobile devices.");
+                    }
+                }
+
+                return handle;
+            });
+        zlibResolverAdded = true;
     }
 }
