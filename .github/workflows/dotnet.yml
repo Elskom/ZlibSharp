@@ -28,6 +28,10 @@ jobs:
         SDK_VERSION: '7.0.100-rc.2.22477.23'
         RUNTIME_VERSIONS: '6.0.x'
 
+    - name: Install zlib from homebrew
+      if: matrix.os == 'macos-latest'
+      run: brew install zlib
+
     - name: Restore, Build, Test, and pack
       uses: Elskom/build-dotnet@main
       with:
