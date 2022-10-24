@@ -12,10 +12,13 @@ public static unsafe class MemoryZlib
 {
     /// <summary>
     /// Gets or sets the native zlib version to use.
-    ///
-    /// Default: version 1.2.11
     /// </summary>
-    public static string NativeZlibVersion { get; set; } = "1.2.11";
+    /// <remarks>
+    /// Default: Version 1.2.11 on Linux / Windows, for MacOS 1.2.13.
+    /// </remarks>
+    public static string NativeZlibVersion { get; set; } = OperatingSystem.IsLinux() || OperatingSystem.IsWindows()
+        ? "1.2.11"
+        : "1.2.13";
 
     /// <summary>
     /// Compresses data using the user specified compression level.
