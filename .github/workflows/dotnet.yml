@@ -26,7 +26,7 @@ jobs:
       uses: Elskom/setup-latest-dotnet@main
       with:
         SDK_VERSION: '7.0.100-rc.2.22477.23'
-        RUNTIME_VERSIONS: ''
+        RUNTIME_VERSIONS: '6.0.x'
 
     - name: Restore, Build, Test, and pack
       uses: Elskom/build-dotnet@main
