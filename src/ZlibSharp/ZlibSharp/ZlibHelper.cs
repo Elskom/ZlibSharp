@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2021, Els_kom org.
+﻿// Copyright (c) 2021~2022, Els_kom org.
 // https://github.com/Elskom/
 // All rights reserved.
 // license: MIT, see LICENSE for more details.
@@ -25,11 +25,11 @@ internal static unsafe class ZlibHelper
             streamPtr->avail_in = (uint)source.Length;
             streamPtr->next_out = destPtr;
             streamPtr->avail_out = (uint)dest.Length;
-            while (UnsafeNativeMethods.deflate(streamPtr, ZlibFlushStrategy.NoFlush) == ZlibResult.Ok)
+            while (UnsafeNativeMethods.deflate(streamPtr, ZlibFlushStrategy.NoFlush) == ZlibPInvokeResult.Ok)
             {
                 if (streamPtr->avail_in == 0)
                 {
-                    UnsafeNativeMethods.deflate(streamPtr, ZlibFlushStrategy.Finish);
+                    _ = UnsafeNativeMethods.deflate(streamPtr, ZlibFlushStrategy.Finish);
                 }
             }
 
@@ -57,11 +57,11 @@ internal static unsafe class ZlibHelper
             streamPtr->avail_in = (uint)source.Length;
             streamPtr->next_out = destPtr;
             streamPtr->avail_out = (uint)dest.Length;
-            while (UnsafeNativeMethods.inflate(streamPtr, ZlibFlushStrategy.NoFlush) == ZlibResult.Ok)
+            while (UnsafeNativeMethods.inflate(streamPtr, ZlibFlushStrategy.NoFlush) == ZlibPInvokeResult.Ok)
             {
                 if (streamPtr->avail_in == 0)
                 {
-                    UnsafeNativeMethods.inflate(streamPtr, ZlibFlushStrategy.Finish);
+                    _ = UnsafeNativeMethods.inflate(streamPtr, ZlibFlushStrategy.Finish);
                 }
             }
 
@@ -80,7 +80,7 @@ internal static unsafe class ZlibHelper
         }
 
         var result = UnsafeNativeMethods.inflateInit_(streamPtr, UnsafeNativeMethods.zlibVersion(), sizeof(ZStream));
-        if (result != ZlibResult.Ok)
+        if (result != ZlibPInvokeResult.Ok)
         {
             throw new NotUnpackableException($"{nameof(InitializeInflate)} failed - ({result}) {Marshal.PtrToStringUTF8((nint)streamPtr->msg)}");        
         }
@@ -94,7 +94,7 @@ internal static unsafe class ZlibHelper
         }
 
         var result = UnsafeNativeMethods.deflateInit_(streamPtr, compressionLevel, UnsafeNativeMethods.zlibVersion(), sizeof(ZStream));
-        if (result != ZlibResult.Ok)
+        if (result != ZlibPInvokeResult.Ok)
         {
             throw new NotPackableException($"{nameof(InitializeDeflate)} failed - ({result}) {Marshal.PtrToStringUTF8((nint)streamPtr->msg)}");        
         }
@@ -103,7 +103,7 @@ internal static unsafe class ZlibHelper
     private static void InflateEnd(ZStream* streamPtr)
     {
         var result = UnsafeNativeMethods.inflateEnd(streamPtr);
-        if (result != ZlibResult.Ok)
+        if (result != ZlibPInvokeResult.Ok)
         {
             throw new NotUnpackableException($"{nameof(InflateEnd)} failed - ({result}) {Marshal.PtrToStringUTF8((nint)streamPtr->msg)}");
         }
@@ -112,7 +112,7 @@ internal static unsafe class ZlibHelper
     private static void DeflateEnd(ZStream* streamPtr)
     {
         var result = UnsafeNativeMethods.deflateEnd(streamPtr);
-        if (result != ZlibResult.Ok)
+        if (result != ZlibPInvokeResult.Ok)
         {
             throw new NotPackableException($"{nameof(DeflateEnd)} failed - ({result}) {Marshal.PtrToStringUTF8((nint)streamPtr->msg)}");
         }

@@ -1,4 +1,4 @@
-// Copyright (c) 2021, Els_kom org.
+// Copyright (c) 2021~2022, Els_kom org.
 // https://github.com/Elskom/
 // All rights reserved.
 // license: MIT, see LICENSE for more details.
@@ -13,27 +13,27 @@ internal static class UnsafeNativeMethods
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
     [DllImport("zlib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-    internal static extern unsafe ZlibResult deflateInit_(ZStream* zs, ZlibCompressionLevel compressionLevel, byte* zlibVersion, int streamSize);
+    internal static extern unsafe ZlibPInvokeResult deflateInit_(ZStream* zs, ZlibCompressionLevel compressionLevel, byte* zlibVersion, int streamSize);
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
     [DllImport("zlib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-    internal static extern unsafe ZlibResult inflateInit_(ZStream* zs, byte* zlibVersion, int streamSize);
+    internal static extern unsafe ZlibPInvokeResult inflateInit_(ZStream* zs, byte* zlibVersion, int streamSize);
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
     [DllImport("zlib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-    internal static extern unsafe ZlibResult inflate(ZStream* zs, ZlibFlushStrategy flush);
+    internal static extern unsafe ZlibPInvokeResult inflate(ZStream* zs, ZlibFlushStrategy flush);
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
     [DllImport("zlib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-    internal static extern unsafe ZlibResult deflate(ZStream* zs, ZlibFlushStrategy flush);
+    internal static extern unsafe ZlibPInvokeResult deflate(ZStream* zs, ZlibFlushStrategy flush);
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
     [DllImport("zlib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-    internal static extern unsafe ZlibResult inflateEnd(ZStream* zs);
+    internal static extern unsafe ZlibPInvokeResult inflateEnd(ZStream* zs);
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
     [DllImport("zlib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-    internal static extern unsafe ZlibResult deflateEnd(ZStream* zs);
+    internal static extern unsafe ZlibPInvokeResult deflateEnd(ZStream* zs);
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
     [DllImport("zlib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]

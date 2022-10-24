@@ -1,19 +1,40 @@
-// Copyright (c) 2021, Els_kom org.
+﻿// Copyright (c) 2021~2022, Els_kom org.
 // https://github.com/Elskom/
 // All rights reserved.
 // license: MIT, see LICENSE for more details.
 
 namespace ZlibSharp;
 
-internal enum ZlibResult
+/// <summary>
+/// The zlib result structure that contains the amount of bytes read, written,
+/// and the adler32 hash of the data that can be used to compare the integrity
+/// of the compressed/decompressed results.
+/// </summary>
+public readonly struct ZlibResult
 {
-    VersionError = -6,
-    BufError,
-    MemError,
-    DataError,
-    StreamError,
-    ErrNo,
-    Ok,
-    StreamEnd,
-    NeedDict,
+    internal ZlibResult(uint bytesWritten, uint bytesRead, uint adler32)
+    {
+        this.BytesWritten = bytesWritten;
+        this.BytesRead = bytesRead;
+        this.Adler32 = adler32;
+    }
+
+    /// <summary>
+    /// The amount of bytes written to the destination buffer.
+    /// </summary>
+    public uint BytesWritten { get; }
+
+    /// <summary>
+    /// The amount of data available from the source buffer, allowing users to reallocate
+    /// and continue decompressing the remaining data.
+    /// </summary>
+    /// <remarks>
+    /// Note: When compressing, this value is always 0. For compression use <see cref="BytesWritten" /> instead.
+    /// </remarks>
+    public uint BytesRead { get; }
+
+    /// <summary>
+    /// The Adler32 checksum of the compressed/decompressed data.
+    /// </summary>
+    public uint Adler32 { get; }
 }

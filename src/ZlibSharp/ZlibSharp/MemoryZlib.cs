@@ -1,4 +1,4 @@
-// Copyright (c) 2021, Els_kom org.
+// Copyright (c) 2021~2022, Els_kom org.
 // https://github.com/Elskom/
 // All rights reserved.
 // license: MIT, see LICENSE for more details.
@@ -27,47 +27,34 @@ public static unsafe class MemoryZlib
     /// Thrown when zlib errors internally in any way.
     /// </exception>
     /// <returns>
-    /// The amount of bytes written to the destination buffer.
+    /// The zlib result structure that contains the amount of bytes read, written,
+    /// and the adler32 hash of the data that can be used to compare the integrity
+    /// of the compressed/decompressed results.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static uint Compress(string sourcePath, Span<byte> dest, ZlibCompressionLevel compressionLevel = ZlibCompressionLevel.DefaultCompression)
+    public static ZlibResult Compress(string sourcePath, Span<byte> dest, ZlibCompressionLevel compressionLevel = ZlibCompressionLevel.DefaultCompression)
+        => Compress(File.ReadAllBytes(sourcePath), dest, compressionLevel);
+
+    /// <summary>
+    /// Compresses data using the user specified compression level.
+    /// </summary>
+    /// <param name="source">The input data buffer.</param>
+    /// <param name="dest">The compressed data buffer.</param>
+    /// <param name="compressionLevel">The compression level to use to compress the file.</param>
+    /// <exception cref="NotPackableException">
+    /// Thrown when zlib errors internally in any way.
+    /// </exception>
+    /// <returns>
+    /// The zlib result structure that contains the amount of bytes read, written,
+    /// and the adler32 hash of the data that can be used to compare the integrity
+    /// of the compressed/decompressed results.
+    /// </returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ZlibResult Compress(Span<byte> source, Span<byte> dest, ZlibCompressionLevel compressionLevel = ZlibCompressionLevel.DefaultCompression)
     {
-        var source = File.ReadAllBytes(sourcePath);
-        return Compress(source, dest, compressionLevel);
+        var bytesWritten = ZlibHelper.Compress(source, dest, compressionLevel, out var adler32);
+        return new(bytesWritten, 0, adler32);
     }
-
-    /// <summary>
-    /// Compresses data using the user specified compression level.
-    /// </summary>
-    /// <param name="source">The input data buffer.</param>
-    /// <param name="dest">The compressed data buffer.</param>
-    /// <param name="compressionLevel">The compression level to use to compress the file.</param>
-    /// <exception cref="NotPackableException">
-    /// Thrown when zlib errors internally in any way.
-    /// </exception>
-    /// <returns>
-    /// The amount of bytes written to the destination buffer.
-    /// </returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static uint Compress(Span<byte> source, Span<byte> dest, ZlibCompressionLevel compressionLevel = ZlibCompressionLevel.DefaultCompression)
-        => Compress(source, dest, compressionLevel, out _);
-
-    /// <summary>
-    /// Compresses data using the user specified compression level.
-    /// </summary>
-    /// <param name="source">The input data buffer.</param>
-    /// <param name="dest">The compressed data buffer.</param>
-    /// <param name="compressionLevel">The compression level to use to compress the file.</param>
-    /// <param name="adler32">The Adler32 checksum of the compressed data.</param>
-    /// <exception cref="NotPackableException">
-    /// Thrown when zlib errors internally in any way.
-    /// </exception>
-    /// <returns>
-    /// The amount of bytes written to the destination buffer.
-    /// </returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static uint Compress(ReadOnlySpan<byte> source, Span<byte> dest, ZlibCompressionLevel compressionLevel, out uint adler32)
-        => ZlibHelper.Compress(source, dest, compressionLevel, out adler32);
 
     /// <summary>
     /// Decompresses a file.
@@ -79,50 +66,33 @@ public static unsafe class MemoryZlib
     /// Thrown when zlib errors internally in any way.
     /// </exception>
     /// <returns>
-    /// The amount of data available from the source buffer, allowing users to reallocate
-    /// and continue decompressing the remaining data.
+    /// The zlib result structure that contains the amount of bytes read, written,
+    /// and the adler32 hash of the data that can be used to compare the integrity
+    /// of the compressed/decompressed results.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static uint Decompress(string sourcePath, Span<byte> dest, out uint bytesWritten)
+    public static ZlibResult Decompress(string sourcePath, Span<byte> dest)
+        => Decompress(File.ReadAllBytes(sourcePath), dest);
+
+    /// <summary>
+    /// Decompresses data.
+    /// </summary>
+    /// <param name="source">The compressed input data.</param>
+    /// <param name="dest">The decompressed data buffer.</param>
+    /// <exception cref="NotPackableException">
+    /// Thrown when zlib errors internally in any way.
+    /// </exception>
+    /// <returns>
+    /// The zlib result structure that contains the amount of bytes read, written,
+    /// and the adler32 hash of the data that can be used to compare the integrity
+    /// of the compressed/decompressed results.
+    /// </returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ZlibResult Decompress(ReadOnlySpan<byte> source, Span<byte> dest)
     {
-        var source = File.ReadAllBytes(sourcePath);
-        return Decompress(source, dest, out bytesWritten);
+        var bytesRead = ZlibHelper.Decompress(source, dest, out var bytesWritten, out var adler32);
+        return new ZlibResult(bytesWritten, bytesRead, adler32);
     }
-
-    /// <summary>
-    /// Decompresses data.
-    /// </summary>
-    /// <param name="source">The compressed input data.</param>
-    /// <param name="dest">The decompressed data buffer.</param>
-    /// <param name="bytesWritten">The amount of bytes written to the destination buffer.</param>
-    /// <exception cref="NotPackableException">
-    /// Thrown when zlib errors internally in any way.
-    /// </exception>
-    /// <returns>
-    /// The amount of data available from the source buffer, allowing users to reallocate
-    /// and continue decompressing the remaining data.
-    /// </returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static uint Decompress(ReadOnlySpan<byte> source, Span<byte> dest, out uint bytesWritten)
-        => Decompress(source, dest, out bytesWritten, out _);
-
-    /// <summary>
-    /// Decompresses data.
-    /// </summary>
-    /// <param name="source">The compressed input data.</param>
-    /// <param name="dest">The decompressed data buffer.</param>
-    /// <param name="bytesWritten">The amount of bytes written to the destination buffer.</param>
-    /// <param name="adler32">The Adler32 checksum of the decompressed data.</param>
-    /// <exception cref="NotPackableException">
-    /// Thrown when zlib errors internally in any way.
-    /// </exception>
-    /// <returns>
-    /// The amount of data available from the source buffer, allowing users to reallocate
-    /// and continue decompressing the remaining data.
-    /// </returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static uint Decompress(ReadOnlySpan<byte> source, Span<byte> dest, out uint bytesWritten, out uint adler32)
-        => ZlibHelper.Decompress(source, dest, out bytesWritten, out adler32);
 
     /// <summary>
     /// Check data for compression by zlib.
@@ -159,8 +129,15 @@ public static unsafe class MemoryZlib
     /// Gets the version to ZlibSharp.
     /// </summary>
     /// <returns>The version string to this version of ZlibSharp.</returns>
-    public static string ZlibVersion()
+    public static string ZlibSharpVersion()
         => typeof(MemoryZlib).Assembly.GetName().Version!.ToString(3);
+
+    /// <summary>
+    /// Gets the version to the imported native zlib library.
+    /// </summary>
+    /// <returns>The version to the imported native zlib library.</returns>
+    public static string ZlibVersion()
+        => new((char*)UnsafeNativeMethods.zlibVersion());
 
     // NEW: Adler32 hasher.
 
