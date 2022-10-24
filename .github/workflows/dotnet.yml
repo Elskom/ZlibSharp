@@ -30,7 +30,7 @@ jobs:
 
     - name: Install zlib from homebrew
       if: matrix.os == 'macos-latest'
-      run: brew install zlib
+      run: brew install zlib@1.2.11
 
     - name: Restore, Build, Test, and pack
       uses: Elskom/build-dotnet@main
