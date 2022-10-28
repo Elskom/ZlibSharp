@@ -1,5 +1,5 @@
 # Auto detect text files and perform LF normalization
 *             text=auto
 
-*.txt         text eol=input
-*.cs          text eol=input diff=csharp
+*.txt         text !eol
+*.cs          text !eol diff=csharp
