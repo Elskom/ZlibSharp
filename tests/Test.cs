@@ -31,6 +31,15 @@ public class Test
     }
 
     [Fact]
+    public void DecompressFileWorks()
+    {
+        var destBuffer = new byte[sourceString.Length];
+        var result = MemoryZlib.Decompress("CompressedText.txt", destBuffer);
+        _ = result.BytesRead.Should().Be(0);
+        _ = destBuffer.Should().Equal(sourceString);
+    }
+
+    [Fact]
     public void DecompressionWorks()
     {
         var result  = MemoryZlib.Decompress(sourceStringCompressed, sourceBuffer);
