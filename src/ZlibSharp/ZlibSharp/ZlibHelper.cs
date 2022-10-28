@@ -5,6 +5,7 @@
 
 namespace ZlibSharp;
 
+[ExcludeFromCodeCoverage]
 internal static unsafe class ZlibHelper
 {
     private static bool zlibResolverAdded;
@@ -79,7 +80,7 @@ internal static unsafe class ZlibHelper
             AddNativeResolver();
         }
 
-        var result = UnsafeNativeMethods.inflateInit_(streamPtr, UnsafeNativeMethods.zlibVersion(), sizeof(ZStream));
+        var result = UnsafeNativeMethods.inflateInit_(streamPtr, sizeof(ZStream));
         if (result != ZlibPInvokeResult.Ok)
         {
             throw new NotUnpackableException($"{nameof(InitializeInflate)} failed - ({result}) {Marshal.PtrToStringUTF8((nint)streamPtr->msg)}");        
@@ -93,7 +94,7 @@ internal static unsafe class ZlibHelper
             AddNativeResolver();
         }
 
-        var result = UnsafeNativeMethods.deflateInit_(streamPtr, compressionLevel, UnsafeNativeMethods.zlibVersion(), sizeof(ZStream));
+        var result = UnsafeNativeMethods.deflateInit_(streamPtr, compressionLevel, sizeof(ZStream));
         if (result != ZlibPInvokeResult.Ok)
         {
             throw new NotPackableException($"{nameof(InitializeDeflate)} failed - ({result}) {Marshal.PtrToStringUTF8((nint)streamPtr->msg)}");        
@@ -128,20 +129,32 @@ internal static unsafe class ZlibHelper
             {
                 nint handle = IntPtr.Zero;
 
-                // check if name is zlib and the operating system is not Windows.
-                // Otherwise, fallback to default import resolver.
-                if (name == "zlib" && !OperatingSystem.IsWindows())
+                // check if name is zlib otherwise, fallback to default import resolver.
+                if (name == "zlib")
                 {
-                    if (OperatingSystem.IsLinux() || OperatingSystem.IsFreeBSD())
+                    if (OperatingSystem.IsWindows())
                     {
-                        // require zlib from "sudo apt install zlib1g" or
-                        // "sudo apt install zlib1g-dev".
-                        _ = NativeLibrary.TryLoad($"libz.so.{MemoryZlib.NativeZlibVersion}", assembly, path, out handle);
+                        _ = NativeLibrary.TryLoad("zlibwapi.dll", assembly, path, out handle);
+                    }
+                    else if (OperatingSystem.IsLinux() || OperatingSystem.IsFreeBSD())
+                    {
+                        if (!NativeLibrary.TryLoad("libz.so", assembly, path, out handle))
+                        {
+                            // pick up zlib from "sudo apt install zlib1g" or
+                            // "sudo apt install zlib1g-dev".
+                            _ = NativeLibrary.TryLoad($"libz.so.{MemoryZlib.NativeZlibVersion}", assembly, path, out handle);
+                        }
                     }
                     else if (OperatingSystem.IsMacOS() || OperatingSystem.IsMacCatalyst())
                     {
-                        // require homebrew zlib.
-                        _ = NativeLibrary.TryLoad($"/usr/local/Cellar/zlib/{MemoryZlib.NativeZlibVersion}/lib/libz.{MemoryZlib.NativeZlibVersion}.dylib", out handle);
+                        if (!NativeLibrary.TryLoad($"libz.{MemoryZlib.NativeZlibVersion}.dylib", assembly, path, out handle))
+                        {
+                            if (!NativeLibrary.TryLoad("libz.dylib", assembly, path, out handle))
+                            {
+                                // fall back on homebrew zlib.
+                                _ = NativeLibrary.TryLoad($"/usr/local/Cellar/zlib/{MemoryZlib.NativeZlibVersion}/lib/libz.{MemoryZlib.NativeZlibVersion}.dylib", out handle);
+                            }
+                        }
                     }
                     else
                     {

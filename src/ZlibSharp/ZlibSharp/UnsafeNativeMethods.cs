@@ -5,6 +5,7 @@
 
 namespace ZlibSharp;
 
+[ExcludeFromCodeCoverage]
 internal static class UnsafeNativeMethods
 {
     [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
@@ -39,6 +40,10 @@ internal static class UnsafeNativeMethods
     [DllImport("zlib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true, EntryPoint = "adler32")]
     private static extern unsafe ulong adler32_private(ulong adler, byte* buf, uint len);
 
+    [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
+    [DllImport("zlib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true, EntryPoint = "crc32")]
+    private static extern unsafe ulong crc32_private(ulong crc, byte* buf, uint len);
+
     private static void ThrowInvalidOperationException()
         => throw new InvalidOperationException($"Zlib version '{MemoryZlib.NativeZlibVersion}' not found. Please install the proper '{RuntimeInformation.ProcessArchitecture}' version and then try again.");
 
@@ -59,11 +64,11 @@ internal static class UnsafeNativeMethods
     }
 
     [SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "P/Invoke.")]
-    internal static unsafe ZlibPInvokeResult deflateInit_(ZStream* zs, ZlibCompressionLevel compressionLevel, byte* zlibVersion, int streamSize)
+    internal static unsafe ZlibPInvokeResult deflateInit_(ZStream* zs, ZlibCompressionLevel compressionLevel, int streamSize)
     {
         try
         {
-            return deflateInit__private(zs, compressionLevel, zlibVersion, streamSize);
+            return deflateInit__private(zs, compressionLevel, zlibVersion(), streamSize);
         }
         catch (DllNotFoundException)
         {
@@ -75,11 +80,11 @@ internal static class UnsafeNativeMethods
     }
 
     [SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "P/Invoke.")]
-    internal static unsafe ZlibPInvokeResult inflateInit_(ZStream* zs, byte* zlibVersion, int streamSize)
+    internal static unsafe ZlibPInvokeResult inflateInit_(ZStream* zs, int streamSize)
     {
         try
         {
-            return inflateInit__private(zs, zlibVersion, streamSize);
+            return inflateInit__private(zs, zlibVersion(), streamSize);
         }
         catch (DllNotFoundException)
         {
@@ -160,6 +165,22 @@ internal static class UnsafeNativeMethods
         try
         {
             return adler32_private(adler, buf, len);
+        }
+        catch (DllNotFoundException)
+        {
+            ThrowInvalidOperationException();
+
+            // never really called but it must be here to compile this.
+            return 0;
+        }
+    }
+
+    [SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "P/Invoke.")]
+    internal static unsafe ulong crc32(ulong crc, byte* buf, uint len)
+    {
+        try
+        {
+            return crc32_private(crc, buf, len);
         }
         catch (DllNotFoundException)
         {

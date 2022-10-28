@@ -14,11 +14,9 @@ public static unsafe class MemoryZlib
     /// Gets or sets the native zlib version to use.
     /// </summary>
     /// <remarks>
-    /// Default: Version 1.2.11 on Linux / Windows, for MacOS 1.2.13.
+    /// Default: Version 1.2.13.
     /// </remarks>
-    public static string NativeZlibVersion { get; set; } = OperatingSystem.IsLinux() || OperatingSystem.IsWindows()
-        ? "1.2.11"
-        : "1.2.13";
+    public static string NativeZlibVersion { get; set; } = "1.2.13";
 
     /// <summary>
     /// Compresses data using the user specified compression level.
@@ -140,7 +138,7 @@ public static unsafe class MemoryZlib
     /// </summary>
     /// <returns>The version to the imported native zlib library.</returns>
     public static string ZlibVersion()
-        => new((char*)UnsafeNativeMethods.zlibVersion());
+        => Encoding.UTF8.GetString(UnsafeNativeMethods.zlibVersion(), 6);
 
     // NEW: Adler32 hasher.
 
@@ -156,6 +154,23 @@ public static unsafe class MemoryZlib
         {
             return UnsafeNativeMethods.adler32(
                 UnsafeNativeMethods.adler32(0L, null, 0),
+                dataPtr,
+                (uint)data.Length);
+        }
+    }
+
+    /// <summary>
+    /// Gets the Crc32 checksum of the input data at the specified index and length.
+    /// </summary>
+    /// <param name="data">The data to checksum.</param>
+    /// <returns>The Crc32 hash of the input data.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ulong ZlibGetCrc32(ReadOnlySpan<byte> data)
+    {
+        fixed (byte* dataPtr = data)
+        {
+            return UnsafeNativeMethods.crc32(
+                UnsafeNativeMethods.crc32(0L, null, 0),
                 dataPtr,
                 (uint)data.Length);
         }

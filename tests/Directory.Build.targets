@@ -4,6 +4,7 @@
     <None Include="SourceText.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <Using Include="System.Diagnostics.CodeAnalysis" />
     <Using Include="FluentAssertions" />
     <Using Include="Xunit" />
   </ItemGroup>

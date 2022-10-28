@@ -5,6 +5,7 @@
 
 namespace ZlibSharp.Tests;
 
+[ExcludeFromCodeCoverage]
 public class Test
 {
     private readonly byte[] sourceString, sourceStringCompressed, sourceBuffer;
@@ -21,9 +22,20 @@ public class Test
     }
 
     [Fact]
+    public void CompressFileWorks()
+    {
+        var destBuffer = new byte[sourceString.Length];
+        var result = MemoryZlib.Compress("SourceText.txt", destBuffer.AsSpan(), ZlibCompressionLevel.Level7);
+        _ = result.BytesWritten.Should().BeGreaterThan(0);
+        _ = result.Adler32.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
     public void DecompressionWorks()
     {
-        _ = MemoryZlib.Decompress(sourceStringCompressed, sourceBuffer).BytesRead.Should().Be(0);
+        var result  = MemoryZlib.Decompress(sourceStringCompressed, sourceBuffer);
+        _ = result.BytesRead.Should().Be(0);
+        _ = result.Adler32.Should().BeGreaterThan(0);
         _ = sourceBuffer.Should().Equal(sourceString);
     }
 
@@ -57,4 +69,35 @@ public class Test
         _ = result.BytesRead.Should().Be(0);
         _ = result.BytesWritten.Should().Be(sourceLength);
     }
+
+    [Fact]
+    public void ZlibSharpVersionWorks()
+        => _ = MemoryZlib.ZlibSharpVersion().Should().Be("1.2.13");
+
+    [Fact]
+    public void ZlibVersionWorks()
+        => _ = MemoryZlib.ZlibVersion().Should().Be(MemoryZlib.NativeZlibVersion);
+
+    [Fact]
+    public void IsCompressedByZlibWorks()
+        => _ = MemoryZlib.IsCompressedByZlib("SourceText.txt").Should().BeFalse();
+
+    [Fact]
+    public void IsCompressedByZlibFailure()
+        => _ = Assert.Throws<ArgumentNullException>(
+            [ExcludeFromCodeCoverage] () => _ = MemoryZlib.IsCompressedByZlib(Array.Empty<byte>()));
+
+    [Fact]
+    public void NativeZlibVersionWorks()
+    {
+        var testZlibVersion = "1.2.11";
+        var originalVersion = MemoryZlib.NativeZlibVersion;
+        MemoryZlib.NativeZlibVersion = testZlibVersion;
+        _ = MemoryZlib.NativeZlibVersion.Should().Be(testZlibVersion);
+        MemoryZlib.NativeZlibVersion = originalVersion;
+    }
+
+    [Fact]
+    public void GetAdler32Works()
+        => _ = MemoryZlib.ZlibGetAdler32(File.ReadAllBytes("SourceText.txt")).Should().Be(2150767711UL);
 }

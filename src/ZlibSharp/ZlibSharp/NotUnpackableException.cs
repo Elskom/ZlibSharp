@@ -8,6 +8,7 @@ namespace ZlibSharp;
 /// <summary>
 /// Zlib Memory Unpacking failure error.
 /// </summary>
+[ExcludeFromCodeCoverage]
 [Serializable]
 public sealed class NotUnpackableException : IOException
 {
