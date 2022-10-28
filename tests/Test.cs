@@ -100,4 +100,8 @@ public class Test
     [Fact]
     public void GetAdler32Works()
         => _ = MemoryZlib.ZlibGetAdler32(File.ReadAllBytes("SourceText.txt")).Should().Be(2150767711UL);
+
+    [Fact]
+    public void GetCrc32Works()
+        => _ = MemoryZlib.ZlibGetCrc32(File.ReadAllBytes("SourceText.txt")).Should().Be(0x2C10ACE9);
 }
