@@ -99,9 +99,13 @@ public class Test
 
     [Fact]
     public void GetAdler32Works()
-        => _ = MemoryZlib.ZlibGetAdler32(File.ReadAllBytes("SourceText.txt")).Should().Be(2150767711UL);
+        => _ = OperatingSystem.IsWindows()
+            ? MemoryZlib.ZlibGetAdler32(File.ReadAllBytes("SourceText.txt")).Should().Be(2150767711UL)
+            : MemoryZlib.ZlibGetAdler32(File.ReadAllBytes("SourceText.txt")).Should().Be(1353978891UL);
 
     [Fact]
     public void GetCrc32Works()
-        => _ = MemoryZlib.ZlibGetCrc32(File.ReadAllBytes("SourceText.txt")).Should().Be(0x2C10ACE9);
+        => _ = OperatingSystem.IsWindows()
+            ? MemoryZlib.ZlibGetCrc32(File.ReadAllBytes("SourceText.txt")).Should().Be(739290345UL)
+            : MemoryZlib.ZlibGetCrc32(File.ReadAllBytes("SourceText.txt")).Should().Be(3371650901UL);
 }

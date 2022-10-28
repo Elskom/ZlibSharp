@@ -147,9 +147,9 @@ internal static unsafe class ZlibHelper
                     }
                     else if (OperatingSystem.IsMacOS() || OperatingSystem.IsMacCatalyst())
                     {
-                        if (!NativeLibrary.TryLoad($"libz.{MemoryZlib.NativeZlibVersion}.dylib", assembly, path, out handle))
+                        if (!NativeLibrary.TryLoad("libz.dylib", assembly, path, out handle))
                         {
-                            if (!NativeLibrary.TryLoad("libz.dylib", assembly, path, out handle))
+                            if (!NativeLibrary.TryLoad($"libz.{MemoryZlib.NativeZlibVersion}.dylib", assembly, path, out handle))
                             {
                                 // fall back on homebrew zlib.
                                 _ = NativeLibrary.TryLoad($"/usr/local/Cellar/zlib/{MemoryZlib.NativeZlibVersion}/lib/libz.{MemoryZlib.NativeZlibVersion}.dylib", out handle);
