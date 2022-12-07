@@ -99,7 +99,7 @@ public class Test
     [Fact]
     public void NativeZlibVersionWorks()
     {
-        var testZlibVersion = "1.2.11";
+        var testZlibVersion = "1.2.13";
         var originalVersion = MemoryZlib.NativeZlibVersion;
         MemoryZlib.NativeZlibVersion = testZlibVersion;
         _ = MemoryZlib.NativeZlibVersion.Should().Be(testZlibVersion);
