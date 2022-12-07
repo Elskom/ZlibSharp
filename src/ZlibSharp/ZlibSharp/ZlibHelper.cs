@@ -81,7 +81,7 @@ internal static unsafe class ZlibHelper
         }
 
         var result = UnsafeNativeMethods.inflateInit_(streamPtr, sizeof(ZStream));
-        if (result != ZlibPInvokeResult.Ok)
+        if (result is not ZlibPInvokeResult.Ok)
         {
             throw new NotUnpackableException($"{nameof(InitializeInflate)} failed - ({result}) {Marshal.PtrToStringUTF8((nint)streamPtr->msg)}");        
         }
@@ -95,7 +95,7 @@ internal static unsafe class ZlibHelper
         }
 
         var result = UnsafeNativeMethods.deflateInit_(streamPtr, compressionLevel, sizeof(ZStream));
-        if (result != ZlibPInvokeResult.Ok)
+        if (result is not ZlibPInvokeResult.Ok)
         {
             throw new NotPackableException($"{nameof(InitializeDeflate)} failed - ({result}) {Marshal.PtrToStringUTF8((nint)streamPtr->msg)}");        
         }
@@ -104,7 +104,7 @@ internal static unsafe class ZlibHelper
     private static void InflateEnd(ZStream* streamPtr)
     {
         var result = UnsafeNativeMethods.inflateEnd(streamPtr);
-        if (result != ZlibPInvokeResult.Ok)
+        if (result is not ZlibPInvokeResult.Ok)
         {
             throw new NotUnpackableException($"{nameof(InflateEnd)} failed - ({result}) {Marshal.PtrToStringUTF8((nint)streamPtr->msg)}");
         }
@@ -113,7 +113,7 @@ internal static unsafe class ZlibHelper
     private static void DeflateEnd(ZStream* streamPtr)
     {
         var result = UnsafeNativeMethods.deflateEnd(streamPtr);
-        if (result != ZlibPInvokeResult.Ok)
+        if (result is not ZlibPInvokeResult.Ok)
         {
             throw new NotPackableException($"{nameof(DeflateEnd)} failed - ({result}) {Marshal.PtrToStringUTF8((nint)streamPtr->msg)}");
         }
