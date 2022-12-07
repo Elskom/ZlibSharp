@@ -3,6 +3,7 @@
   <Import Project="../../Directory.Build.props" />
 
   <PropertyGroup>
+    <Version>1.2.13</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 

@@ -5,13 +5,15 @@
 
 namespace ZlibSharp;
 
-public enum ZlibFlushStrategy
+internal enum ZlibPInvokeResult
 {
-    NoFlush,
-    PartialFlush,
-    SyncFlush,
-    FullFlush,
-    Finish,
-    Block,
-    Trees,
+    VersionError = -6,
+    BufError,
+    MemError,
+    DataError,
+    StreamError,
+    ErrNo,
+    Ok,
+    StreamEnd,
+    NeedDict,
 }

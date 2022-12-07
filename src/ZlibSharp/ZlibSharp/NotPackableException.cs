@@ -1,4 +1,4 @@
-// Copyright (c) 2021, Els_kom org.
+// Copyright (c) 2021~2022, Els_kom org.
 // https://github.com/Elskom/
 // All rights reserved.
 // license: MIT, see LICENSE for more details.
@@ -8,6 +8,7 @@ namespace ZlibSharp;
 /// <summary>
 /// Zlib Memory Packing failure error.
 /// </summary>
+[ExcludeFromCodeCoverage]
 [Serializable]
 public sealed class NotPackableException : IOException
 {

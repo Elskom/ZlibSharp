@@ -1,8 +1,11 @@
 <Project>
 
   <ItemGroup>
+    <Using Include="System.Diagnostics.CodeAnalysis" />
     <Using Include="System.Runtime.InteropServices" />
     <Using Include="System.Runtime.Serialization" />
+    <Using Include="System.Runtime.CompilerServices" />
+    <Using Include="System.Text" />
   </ItemGroup>
 
 </Project>
