@@ -5,6 +5,9 @@
 
 namespace ZlibSharp;
 
+using Internal;
+using Exceptions;
+
 /// <summary>
 /// Zlib Memory Compression and Decompression Class.
 /// </summary>
@@ -24,6 +27,8 @@ public static unsafe class MemoryZlib
     /// <param name="sourcePath">The path to the file to compress.</param>
     /// <param name="dest">The compressed data buffer.</param>
     /// <param name="compressionLevel">The compression level to use to compress the file.</param>
+    /// <param name="windowBits">The window bits to use to compress the data.</param>
+    /// <param name="strategy">The compression strategy to use to compress the data.</param>
     /// <exception cref="NotPackableException">
     /// Thrown when zlib errors internally in any way.
     /// </exception>
@@ -33,15 +38,17 @@ public static unsafe class MemoryZlib
     /// of the compressed/decompressed results.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ZlibResult Compress(string sourcePath, Span<byte> dest, ZlibCompressionLevel compressionLevel = ZlibCompressionLevel.DefaultCompression)
-        => Compress(File.ReadAllBytes(sourcePath), dest, compressionLevel);
+    public static ZlibResult Compress(string sourcePath, Span<byte> dest, ZlibCompressionLevel compressionLevel = ZlibCompressionLevel.DefaultCompression, ZlibWindowBits windowBits = ZlibWindowBits.Deflate, ZlibCompressionStrategy strategy = ZlibCompressionStrategy.Default)
+        => Compress(File.ReadAllBytes(sourcePath), dest, compressionLevel, windowBits, strategy);
 
     /// <summary>
     /// Compresses data using the user specified compression level.
     /// </summary>
     /// <param name="source">The input data buffer.</param>
     /// <param name="dest">The compressed data buffer.</param>
-    /// <param name="compressionLevel">The compression level to use to compress the file.</param>
+    /// <param name="compressionLevel">The compression level to use to compress the data.</param>
+    /// <param name="windowBits">The window bits to use to compress the data.</param>
+    /// <param name="strategy">The compression strategy to use to compress the data.</param>
     /// <exception cref="NotPackableException">
     /// Thrown when zlib errors internally in any way.
     /// </exception>
@@ -51,9 +58,9 @@ public static unsafe class MemoryZlib
     /// of the compressed/decompressed results.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ZlibResult Compress(Span<byte> source, Span<byte> dest, ZlibCompressionLevel compressionLevel = ZlibCompressionLevel.DefaultCompression)
+    public static ZlibResult Compress(ReadOnlySpan<byte> source, Span<byte> dest, ZlibCompressionLevel compressionLevel = ZlibCompressionLevel.DefaultCompression, ZlibWindowBits windowBits = ZlibWindowBits.Deflate, ZlibCompressionStrategy strategy = ZlibCompressionStrategy.Default)
     {
-        var bytesWritten = ZlibHelper.Compress(source, dest, compressionLevel, out var adler32);
+        var bytesWritten = ZlibHelper.Compress(source, dest, compressionLevel, windowBits, strategy, out var adler32);
         return new(bytesWritten, 0, adler32);
     }
 
@@ -62,8 +69,8 @@ public static unsafe class MemoryZlib
     /// </summary>
     /// <param name="sourcePath">The path to the file to decompress.</param>
     /// <param name="dest">The decompressed data buffer.</param>
-    /// <param name="bytesWritten">The amount of bytes written to the destination buffer.</param>
-    /// <exception cref="NotPackableException">
+    /// <param name="windowBits">The window bits to use to decompress the data.</param>
+    /// <exception cref="NotUnpackableException">
     /// Thrown when zlib errors internally in any way.
     /// </exception>
     /// <returns>
@@ -72,15 +79,16 @@ public static unsafe class MemoryZlib
     /// of the compressed/decompressed results.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ZlibResult Decompress(string sourcePath, Span<byte> dest)
-        => Decompress(File.ReadAllBytes(sourcePath), dest);
+    public static ZlibResult Decompress(string sourcePath, Span<byte> dest, ZlibWindowBits windowBits = ZlibWindowBits.Deflate)
+        => Decompress(File.ReadAllBytes(sourcePath), dest, windowBits);
 
     /// <summary>
     /// Decompresses data.
     /// </summary>
     /// <param name="source">The compressed input data.</param>
     /// <param name="dest">The decompressed data buffer.</param>
-    /// <exception cref="NotPackableException">
+    /// <param name="windowBits">The window bits to use to decompress the data.</param>
+    /// <exception cref="NotUnpackableException">
     /// Thrown when zlib errors internally in any way.
     /// </exception>
     /// <returns>
@@ -89,16 +97,48 @@ public static unsafe class MemoryZlib
     /// of the compressed/decompressed results.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ZlibResult Decompress(ReadOnlySpan<byte> source, Span<byte> dest)
+    public static ZlibResult Decompress(ReadOnlySpan<byte> source, Span<byte> dest, ZlibWindowBits windowBits = ZlibWindowBits.Deflate)
     {
-        var bytesRead = ZlibHelper.Decompress(source, dest, out var bytesWritten, out var adler32);
+        var bytesRead = ZlibHelper.Decompress(source, dest, out var bytesWritten, out var adler32, windowBits);
         return new ZlibResult(bytesWritten, bytesRead, adler32);
     }
+
+    // NEW: GZip compression check.
+
+    /// <summary>
+    /// Check data for compression by gzip.
+    /// </summary>
+    /// <param name="source">Input data.</param>
+    /// <returns>Returns <see langword="true" /> if data is compressed by gzip, else <see langword="false" />.</returns>
+    /// <exception cref="ArgumentNullException">When <paramref name="source"/> is <see langword="null" />.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsCompressedByGZip(ReadOnlySpan<byte> source)
+    {
+        if (source.Length >= 2)
+        {
+            ref var sourceRef = ref MemoryMarshal.GetReference(source);
+            var byte1 = sourceRef;
+            var byte2 = Unsafe.Add(ref sourceRef, 1);
+            return byte1 is 0x1F && byte2 is 0x8B;
+        }
+
+        throw new ArgumentNullException(nameof(source));
+    }
+
+    /// <summary>
+    /// Check data for compression by gzip.
+    /// </summary>
+    /// <param name="path">The file to check on if it is compressed by gzip.</param>
+    /// <returns>Returns <see langword="true" /> if data is compressed by gzip, else <see langword="false" />.</returns>
+    /// <exception cref="ArgumentNullException">When <paramref name="path"/> is <see langword="null" /> or <see cref="string.Empty"/>.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsCompressedByGZip(string path)
+        => IsCompressedByGZip(File.ReadAllBytes(path));
 
     /// <summary>
     /// Check data for compression by zlib.
     /// </summary>
-    /// <param name="source">Input stream.</param>
+    /// <param name="source">Input data.</param>
     /// <returns>Returns <see langword="true" /> if data is compressed by zlib, else <see langword="false" />.</returns>
     /// <exception cref="ArgumentNullException">When <paramref name="source"/> is <see langword="null" />.</exception>
     public static bool IsCompressedByZlib(ReadOnlySpan<byte> source)
@@ -124,14 +164,13 @@ public static unsafe class MemoryZlib
     public static bool IsCompressedByZlib(string path)
         => IsCompressedByZlib(File.ReadAllBytes(path));
 
-    // NEW: Zlib version check.
-
     /// <summary>
     /// Gets the version to ZlibSharp.
     /// </summary>
     /// <returns>The version string to this version of ZlibSharp.</returns>
     public static string ZlibSharpVersion()
-        => typeof(MemoryZlib).Assembly.GetName().Version!.ToString(3);
+        // => typeof(MemoryZlib).Assembly.GetName().Version!.ToString(3);
+        => typeof(MemoryZlib).Assembly.GetName().Version!.ToString(4);
 
     /// <summary>
     /// Gets the version to the imported native zlib library.
@@ -139,8 +178,6 @@ public static unsafe class MemoryZlib
     /// <returns>The version to the imported native zlib library.</returns>
     public static string ZlibVersion()
         => Encoding.UTF8.GetString(UnsafeNativeMethods.zlibVersion(), 6);
-
-    // NEW: Adler32 hasher.
 
     /// <summary>
     /// Gets the Adler32 checksum of the input data at the specified index and length.
@@ -174,5 +211,41 @@ public static unsafe class MemoryZlib
                 dataPtr,
                 (uint)data.Length);
         }
+    }
+
+    // NEW: GetCompressedSize/GetDecompressedSize to get the (de)compressed buffer size to use when (de)compressing.
+
+    /// <summary>
+    /// Gets the size of the data when it is compressed. Useful for when the data actually gets compressed.
+    /// </summary>
+    /// <param name="source">The input data buffer.</param>
+    /// <param name="compressionLevel">The compression level to use to compress the data.</param>
+    /// <param name="windowBits">The window bits to use to compress the data.</param>
+    /// <exception cref="NotPackableException">
+    /// Thrown when zlib errors internally in any way.
+    /// </exception>
+    /// <returns>The size of the data when it is compressed.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint GetCompressedSize(ReadOnlySpan<byte> source, ZlibCompressionLevel compressionLevel = ZlibCompressionLevel.DefaultCompression, ZlibWindowBits windowBits = ZlibWindowBits.Deflate)
+    {
+        var discard = new byte[source.Length];
+        var result = Compress(source, discard, compressionLevel, windowBits);
+        return result.BytesWritten;
+    }
+
+    /// <summary>
+    /// Gets the size of the data when it is decompressed. Useful for when the data actually gets decompressed.
+    /// </summary>
+    /// <param name="source">The compressed input data.</param>
+    /// <param name="windowBits">The window bits to use to decompress the data.</param>
+    /// <exception cref="NotUnpackableException">
+    /// Thrown when zlib errors internally in any way.
+    /// </exception>
+    /// <returns>The size of the data when it is decompressed.</returns>
+    public static uint GetDecompressedSize(ReadOnlySpan<byte> source, ZlibWindowBits windowBits = ZlibWindowBits.Deflate)
+    {
+        var discard = new byte[Array.MaxLength];
+        var result = Decompress(source, discard, windowBits);
+        return result.BytesWritten;
     }
 }

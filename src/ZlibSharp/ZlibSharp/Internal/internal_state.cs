@@ -3,8 +3,10 @@
 // All rights reserved.
 // license: MIT, see LICENSE for more details.
 
-namespace ZlibSharp;
+namespace ZlibSharp.Internal;
 
+[ExcludeFromCodeCoverage]
+[SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "Used internally by the native zlib library.")]
 internal struct internal_state
 {
 }

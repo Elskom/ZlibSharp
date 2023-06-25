@@ -3,7 +3,7 @@
 // All rights reserved.
 // license: MIT, see LICENSE for more details.
 
-namespace ZlibSharp;
+namespace ZlibSharp.Internal;
 
 internal enum ZlibPInvokeResult
 {

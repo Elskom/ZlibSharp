@@ -3,9 +3,9 @@
 // All rights reserved.
 // license: MIT, see LICENSE for more details.
 
-namespace ZlibSharp;
+namespace ZlibSharp.Internal;
 
-public enum ZlibFlushStrategy
+internal enum ZlibFlushStrategy
 {
     NoFlush,
     PartialFlush,

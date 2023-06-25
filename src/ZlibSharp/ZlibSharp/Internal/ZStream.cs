@@ -3,8 +3,10 @@
 // All rights reserved.
 // license: MIT, see LICENSE for more details.
 
-namespace ZlibSharp;
+namespace ZlibSharp.Internal;
 
+[ExcludeFromCodeCoverage]
+[StructLayout(LayoutKind.Sequential)]
 internal unsafe struct ZStream
 {
     internal byte* next_in;
@@ -15,11 +17,10 @@ internal unsafe struct ZStream
     internal uint avail_out;
     internal CULong total_out;
     internal byte* msg;
-
     private readonly internal_state* state; // not visible by applications.
 
-    internal delegate* unmanaged[Cdecl] <void*, uint, uint, void*> zalloc;
-    internal delegate* unmanaged[Cdecl] <void*, void*> zfree;
+    internal delegate* unmanaged[Cdecl]<void*, uint, uint, void*> zalloc;
+    internal delegate* unmanaged[Cdecl]<void*, void*> zfree;
     internal void* opaque;
 
     internal int data_type;

@@ -5,6 +5,9 @@
 
 namespace ZlibSharp;
 
+/// <summary>
+/// Zlib's supported compression levels.
+/// </summary>
 public enum ZlibCompressionLevel
 {
     /// <summary>
@@ -23,7 +26,7 @@ public enum ZlibCompressionLevel
     Level1,
 
     /// <summary>
-    /// Best speed compression level.
+    /// Best speed compression level (level 1).
     /// </summary>
     BestSpeed = Level1,
 
@@ -68,7 +71,7 @@ public enum ZlibCompressionLevel
     Level9,
 
     /// <summary>
-    /// The best compression level.
+    /// The best compression level (level 9).
     /// </summary>
     BestCompression = Level9,
 }

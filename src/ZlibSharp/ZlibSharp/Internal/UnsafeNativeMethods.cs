@@ -3,7 +3,7 @@
 // All rights reserved.
 // license: MIT, see LICENSE for more details.
 
-namespace ZlibSharp;
+namespace ZlibSharp.Internal;
 
 [ExcludeFromCodeCoverage]
 internal static class UnsafeNativeMethods
@@ -13,12 +13,12 @@ internal static class UnsafeNativeMethods
     private static extern unsafe byte* zlibVersion_private();
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
-    [DllImport("zlib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true, EntryPoint = "deflateInit_")]
-    private static extern unsafe ZlibPInvokeResult deflateInit__private(ZStream* zs, ZlibCompressionLevel compressionLevel, byte* zlibVersion, int streamSize);
+    [DllImport("zlib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true, EntryPoint = "deflateInit2_")]
+    private static extern unsafe ZlibPInvokeResult deflateInit2__private(ZStream* zs, ZlibCompressionLevel compressionLevel, ZlibCompressionMethod method, ZlibWindowBits windowBits, int memLevel, ZlibCompressionStrategy strategy, byte *version, int streamSize);
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
-    [DllImport("zlib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true, EntryPoint = "inflateInit_")]
-    private static extern unsafe ZlibPInvokeResult inflateInit__private(ZStream* zs, byte* zlibVersion, int streamSize);
+    [DllImport("zlib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true, EntryPoint = "inflateInit2_")]
+    private static extern unsafe ZlibPInvokeResult inflateInit2__private(ZStream* zs, ZlibWindowBits windowBits, byte* version, int streamSize);
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
     [DllImport("zlib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true, EntryPoint = "inflate")]
@@ -64,11 +64,11 @@ internal static class UnsafeNativeMethods
     }
 
     [SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "P/Invoke.")]
-    internal static unsafe ZlibPInvokeResult deflateInit_(ZStream* zs, ZlibCompressionLevel compressionLevel, int streamSize)
+    internal static unsafe ZlibPInvokeResult deflateInit2_(ZStream* zs, ZlibCompressionLevel compressionLevel, ZlibWindowBits windowBits, ZlibCompressionStrategy strategy)
     {
         try
         {
-            return deflateInit__private(zs, compressionLevel, zlibVersion(), streamSize);
+            return deflateInit2__private(zs, compressionLevel, ZlibCompressionMethod.Deflate, windowBits, 8, strategy, zlibVersion(), sizeof(ZStream));
         }
         catch (DllNotFoundException)
         {
@@ -80,11 +80,11 @@ internal static class UnsafeNativeMethods
     }
 
     [SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "P/Invoke.")]
-    internal static unsafe ZlibPInvokeResult inflateInit_(ZStream* zs, int streamSize)
+    internal static unsafe ZlibPInvokeResult inflateInit2_(ZStream* zs, ZlibWindowBits windowBits)
     {
         try
         {
-            return inflateInit__private(zs, zlibVersion(), streamSize);
+            return inflateInit2__private(zs, windowBits, zlibVersion(), sizeof(ZStream));
         }
         catch (DllNotFoundException)
         {
