@@ -3,34 +3,15 @@
   <Import Project="../../Directory.Build.props" />
 
   <PropertyGroup>
-    <Version>1.2.13.1</Version>
+    <Version>1.2.13.2</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageReleaseNotes>
-      Added gzip support and more control over how compression/decompression is done based on the input Window Bits.
-
-      For simplicity reasons, the Window Bits are stored inside of a ZlibWindowBits enum.
-
-      Added types:
-      - ZlibCompressionStrategy
-      - ZlibWindowBits
-
-      Added members in MemoryZlib:
-      - IsCompressedByGZip
-        - Note: There is no version of the function for raw deflate streams due to the fact that they lack a header and a footer unline zlib/gzip compressed data.
-      - GetCompressedSize (works with deflate/zlib/gzip compressed data) No more worrying about over or even under allocating the buffers!!!
-      - GetDecompressedSize (works with deflate/zlib/gzip compressed data) No more worrying about over or even under allocating the buffers!!!
-
-      Changed members in MemoryZlib:
-      - Compress (both versions) adding optional parameters. Please recompile any existing code using these methods as the original would not be found if not recompiled.
-      - Decompress (both versions) adding optional parameters. Please recompile any existing code using these methods as the original would not be found if not recompiled.
-
-      Internal Changes:
-      - Migrated from deflateInit_/inflateInit_ to deflateInit2_/inflateInit2_ zlib apis due to needing more control over the compressed data.
-
-      The result:
-      - Performance improvement vs using System.IO.Compression.DeflateStream, System.IO.Compression.ZlibStream, and System.IO.Compression.GZipStream and supports more control over how to compress the data unlike those streams which lack said support.
+      A minor bug fix the the previous patch release that fixes the incorect default window bits values in the various MemoryZlib members that were changed/introduced in that update.
     </PackageReleaseNotes>
+    <Description>
+      A high performance .NET zlib wrapper that is span based and offers more functionality over System.IO.Compression by allowing more developer control over how the data is compressed and by avoiding .NET's streams entirely.
+    </Description>
   </PropertyGroup>
 
 </Project>

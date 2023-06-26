@@ -38,7 +38,7 @@ public static unsafe class MemoryZlib
     /// of the compressed/decompressed results.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ZlibResult Compress(string sourcePath, Span<byte> dest, ZlibCompressionLevel compressionLevel = ZlibCompressionLevel.DefaultCompression, ZlibWindowBits windowBits = ZlibWindowBits.Deflate, ZlibCompressionStrategy strategy = ZlibCompressionStrategy.Default)
+    public static ZlibResult Compress(string sourcePath, Span<byte> dest, ZlibCompressionLevel compressionLevel = ZlibCompressionLevel.DefaultCompression, ZlibWindowBits windowBits = ZlibWindowBits.Zlib, ZlibCompressionStrategy strategy = ZlibCompressionStrategy.Default)
         => Compress(File.ReadAllBytes(sourcePath), dest, compressionLevel, windowBits, strategy);
 
     /// <summary>
@@ -58,7 +58,7 @@ public static unsafe class MemoryZlib
     /// of the compressed/decompressed results.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ZlibResult Compress(ReadOnlySpan<byte> source, Span<byte> dest, ZlibCompressionLevel compressionLevel = ZlibCompressionLevel.DefaultCompression, ZlibWindowBits windowBits = ZlibWindowBits.Deflate, ZlibCompressionStrategy strategy = ZlibCompressionStrategy.Default)
+    public static ZlibResult Compress(ReadOnlySpan<byte> source, Span<byte> dest, ZlibCompressionLevel compressionLevel = ZlibCompressionLevel.DefaultCompression, ZlibWindowBits windowBits = ZlibWindowBits.Zlib, ZlibCompressionStrategy strategy = ZlibCompressionStrategy.Default)
     {
         var bytesWritten = ZlibHelper.Compress(source, dest, compressionLevel, windowBits, strategy, out var adler32);
         return new(bytesWritten, 0, adler32);
@@ -79,7 +79,7 @@ public static unsafe class MemoryZlib
     /// of the compressed/decompressed results.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ZlibResult Decompress(string sourcePath, Span<byte> dest, ZlibWindowBits windowBits = ZlibWindowBits.Deflate)
+    public static ZlibResult Decompress(string sourcePath, Span<byte> dest, ZlibWindowBits windowBits = ZlibWindowBits.Zlib)
         => Decompress(File.ReadAllBytes(sourcePath), dest, windowBits);
 
     /// <summary>
@@ -97,7 +97,7 @@ public static unsafe class MemoryZlib
     /// of the compressed/decompressed results.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ZlibResult Decompress(ReadOnlySpan<byte> source, Span<byte> dest, ZlibWindowBits windowBits = ZlibWindowBits.Deflate)
+    public static ZlibResult Decompress(ReadOnlySpan<byte> source, Span<byte> dest, ZlibWindowBits windowBits = ZlibWindowBits.Zlib)
     {
         var bytesRead = ZlibHelper.Decompress(source, dest, out var bytesWritten, out var adler32, windowBits);
         return new ZlibResult(bytesWritten, bytesRead, adler32);
@@ -226,7 +226,7 @@ public static unsafe class MemoryZlib
     /// </exception>
     /// <returns>The size of the data when it is compressed.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static uint GetCompressedSize(ReadOnlySpan<byte> source, ZlibCompressionLevel compressionLevel = ZlibCompressionLevel.DefaultCompression, ZlibWindowBits windowBits = ZlibWindowBits.Deflate)
+    public static uint GetCompressedSize(ReadOnlySpan<byte> source, ZlibCompressionLevel compressionLevel = ZlibCompressionLevel.DefaultCompression, ZlibWindowBits windowBits = ZlibWindowBits.Zlib)
     {
         var discard = new byte[source.Length];
         var result = Compress(source, discard, compressionLevel, windowBits);
@@ -242,7 +242,7 @@ public static unsafe class MemoryZlib
     /// Thrown when zlib errors internally in any way.
     /// </exception>
     /// <returns>The size of the data when it is decompressed.</returns>
-    public static uint GetDecompressedSize(ReadOnlySpan<byte> source, ZlibWindowBits windowBits = ZlibWindowBits.Deflate)
+    public static uint GetDecompressedSize(ReadOnlySpan<byte> source, ZlibWindowBits windowBits = ZlibWindowBits.Zlib)
     {
         var discard = new byte[Array.MaxLength];
         var result = Decompress(source, discard, windowBits);

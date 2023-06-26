@@ -83,7 +83,7 @@ public class Test
 
     [Fact]
     public void ZlibSharpVersionWorks()
-        => _ = MemoryZlib.ZlibSharpVersion().Should().Be("1.2.13.1");
+        => _ = MemoryZlib.ZlibSharpVersion().Should().Be("1.2.13.2");
 
     [Fact]
     public void ZlibVersionWorks()
@@ -95,11 +95,7 @@ public class Test
 
     [Fact]
     public void IsCompressedByZlibWorksAndIsTrue()
-    {
-        var destBuffer = new byte[MemoryZlib.GetCompressedSize(sourceString)];
-        _ = MemoryZlib.Compress(sourceString, destBuffer, windowBits: ZlibWindowBits.Zlib);
-        _ = MemoryZlib.IsCompressedByZlib(destBuffer).Should().BeTrue();
-    }
+        => _ = MemoryZlib.IsCompressedByZlib("CompressedText.txt").Should().BeTrue();
 
     [Fact]
     public void IsCompressedByZlibFailure()
