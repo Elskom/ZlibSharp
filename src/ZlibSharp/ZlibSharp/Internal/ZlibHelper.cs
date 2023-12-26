@@ -42,7 +42,7 @@ internal static unsafe class ZlibHelper
                 }
             }
 
-            adler32 = unchecked((uint)(MemoryZlib.ZlibGetAdler32(dest) & 0xFFFFFFFF));
+            adler32 = unchecked((uint)(MemoryZlib.ZlibGetAdler32(source) & 0xFFFFFFFF));
             DeflateEnd(streamPtr);
             return (uint)stream.total_out.Value;
         }

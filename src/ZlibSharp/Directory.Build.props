@@ -3,11 +3,11 @@
   <Import Project="../../Directory.Build.props" />
 
   <PropertyGroup>
-    <Version>1.2.13.2</Version>
+    <Version>1.2.13.3</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageReleaseNotes>
-      A minor bug fix the the previous patch release that fixes the incorect default window bits values in the various MemoryZlib members that were changed/introduced in that update.
+      A bug fix to the calculation of the adler32 hash when compressing data. Also added strong name signing as well.
     </PackageReleaseNotes>
     <Description>
       A high performance .NET zlib wrapper that is span based and offers more functionality over System.IO.Compression by allowing more developer control over how the data is compressed and by avoiding .NET's streams entirely.

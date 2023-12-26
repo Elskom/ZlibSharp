@@ -83,7 +83,7 @@ public class Test
 
     [Fact]
     public void ZlibSharpVersionWorks()
-        => _ = MemoryZlib.ZlibSharpVersion().Should().Be("1.2.13.2");
+        => _ = MemoryZlib.ZlibSharpVersion().Should().Be("1.2.13.3");
 
     [Fact]
     public void ZlibVersionWorks()
