@@ -14,27 +14,27 @@ internal static class UnsafeNativeMethods
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
     [DllImport("zlib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true, EntryPoint = "deflateInit2_")]
-    private static extern unsafe ZlibPInvokeResult deflateInit2__private(ZStream* zs, ZlibCompressionLevel compressionLevel, ZlibCompressionMethod method, ZlibWindowBits windowBits, int memLevel, ZlibCompressionStrategy strategy, byte *version, int streamSize);
+    private static extern unsafe ZlibStatus deflateInit2__private(ZStream* zs, ZlibCompressionLevel compressionLevel, ZlibCompressionMethod method, ZlibWindowBits windowBits, int memLevel, ZlibCompressionStrategy strategy, byte *version, int streamSize);
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
     [DllImport("zlib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true, EntryPoint = "inflateInit2_")]
-    private static extern unsafe ZlibPInvokeResult inflateInit2__private(ZStream* zs, ZlibWindowBits windowBits, byte* version, int streamSize);
+    private static extern unsafe ZlibStatus inflateInit2__private(ZStream* zs, ZlibWindowBits windowBits, byte* version, int streamSize);
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
     [DllImport("zlib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true, EntryPoint = "inflate")]
-    private static extern unsafe ZlibPInvokeResult inflate_private(ZStream* zs, ZlibFlushStrategy flush);
+    private static extern unsafe ZlibStatus inflate_private(ZStream* zs, ZlibFlushStrategy flush);
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
     [DllImport("zlib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true, EntryPoint = "deflate")]
-    private static extern unsafe ZlibPInvokeResult deflate_private(ZStream* zs, ZlibFlushStrategy flush);
+    private static extern unsafe ZlibStatus deflate_private(ZStream* zs, ZlibFlushStrategy flush);
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
     [DllImport("zlib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true, EntryPoint = "inflateEnd")]
-    private static extern unsafe ZlibPInvokeResult inflateEnd_private(ZStream* zs);
+    private static extern unsafe ZlibStatus inflateEnd_private(ZStream* zs);
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
     [DllImport("zlib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true, EntryPoint = "deflateEnd")]
-    private static extern unsafe ZlibPInvokeResult deflateEnd_private(ZStream* zs);
+    private static extern unsafe ZlibStatus deflateEnd_private(ZStream* zs);
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
     [DllImport("zlib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true, EntryPoint = "adler32")]
@@ -45,7 +45,7 @@ internal static class UnsafeNativeMethods
     private static extern unsafe ulong crc32_private(ulong crc, byte* buf, uint len);
 
     private static void ThrowInvalidOperationException()
-        => throw new InvalidOperationException($"Zlib version '{MemoryZlib.NativeZlibVersion}' not found. Please install the proper '{RuntimeInformation.ProcessArchitecture}' version and then try again.");
+        => throw new InvalidOperationException($"Zlib version '{Checks.NativeZlibVersion}' not found. Please install the proper '{RuntimeInformation.ProcessArchitecture}' version and then try again.");
 
     [SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "P/Invoke.")]
     internal static unsafe byte* zlibVersion()
@@ -64,7 +64,7 @@ internal static class UnsafeNativeMethods
     }
 
     [SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "P/Invoke.")]
-    internal static unsafe ZlibPInvokeResult deflateInit2_(ZStream* zs, ZlibCompressionLevel compressionLevel, ZlibWindowBits windowBits, ZlibCompressionStrategy strategy)
+    internal static unsafe ZlibStatus deflateInit2_(ZStream* zs, ZlibCompressionLevel compressionLevel, ZlibWindowBits windowBits, ZlibCompressionStrategy strategy)
     {
         try
         {
@@ -80,7 +80,7 @@ internal static class UnsafeNativeMethods
     }
 
     [SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "P/Invoke.")]
-    internal static unsafe ZlibPInvokeResult inflateInit2_(ZStream* zs, ZlibWindowBits windowBits)
+    internal static unsafe ZlibStatus inflateInit2_(ZStream* zs, ZlibWindowBits windowBits)
     {
         try
         {
@@ -96,7 +96,7 @@ internal static class UnsafeNativeMethods
     }
 
     [SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "P/Invoke.")]
-    internal static unsafe ZlibPInvokeResult inflate(ZStream* zs, ZlibFlushStrategy flush)
+    internal static unsafe ZlibStatus inflate(ZStream* zs, ZlibFlushStrategy flush)
     {
         try
         {
@@ -112,7 +112,7 @@ internal static class UnsafeNativeMethods
     }
 
     [SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "P/Invoke.")]
-    internal static unsafe ZlibPInvokeResult deflate(ZStream* zs, ZlibFlushStrategy flush)
+    internal static unsafe ZlibStatus deflate(ZStream* zs, ZlibFlushStrategy flush)
     {
         try
         {
@@ -128,7 +128,7 @@ internal static class UnsafeNativeMethods
     }
 
     [SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "P/Invoke.")]
-    internal static unsafe ZlibPInvokeResult inflateEnd(ZStream* zs)
+    internal static unsafe ZlibStatus inflateEnd(ZStream* zs)
     {
         try
         {
@@ -144,7 +144,7 @@ internal static class UnsafeNativeMethods
     }
 
     [SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "P/Invoke.")]
-    internal static unsafe ZlibPInvokeResult deflateEnd(ZStream* zs)
+    internal static unsafe ZlibStatus deflateEnd(ZStream* zs)
     {
         try
         {

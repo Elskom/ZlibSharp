@@ -3,11 +3,17 @@
   <Import Project="../../Directory.Build.props" />
 
   <PropertyGroup>
-    <Version>1.2.13.3</Version>
+    <Version>1.2.13.4</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageReleaseNotes>
-      A bug fix to the calculation of the adler32 hash when compressing data. Also added strong name signing as well.
+      - Made ZlibStatus public.
+      - Replaced MemoryZlib static class with:
+        - Checks inside of a `Checks` static class.
+        - Compression methods inside of a new ZlibEncoder class.*
+        - Decompression methods inside of a new ZlibDecoder class.*
+      - Added Crc32 and Status members to the ZlibResult structure.
+      * The new ZlibEncoder has new TryCompress methods while the new ZlibDecoder has new TryDecompress methods.
     </PackageReleaseNotes>
     <Description>
       A high performance .NET zlib wrapper that is span based and offers more functionality over System.IO.Compression by allowing more developer control over how the data is compressed and by avoiding .NET's streams entirely.

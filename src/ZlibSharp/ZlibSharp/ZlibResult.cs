@@ -12,11 +12,13 @@ namespace ZlibSharp;
 /// </summary>
 public readonly struct ZlibResult
 {
-    internal ZlibResult(uint bytesWritten, uint bytesRead, uint adler32)
+    internal ZlibResult(uint bytesWritten, uint bytesRead, uint adler32, uint crc32, ZlibStatus status)
     {
         this.BytesWritten = bytesWritten;
         this.BytesRead = bytesRead;
         this.Adler32 = adler32;
+        this.Crc32 = crc32;
+        this.Status = status;
     }
 
     /// <summary>
@@ -37,4 +39,14 @@ public readonly struct ZlibResult
     /// The Adler32 checksum of the compressed/decompressed data.
     /// </summary>
     public uint Adler32 { get; }
+
+    /// <summary>
+    /// The Crc32 checksum of the compressed/decompressed data.
+    /// </summary>
+    public uint Crc32 { get; }
+
+    /// <summary>
+    /// The resulting status code from zlib.
+    /// </summary>
+    public ZlibStatus Status { get; }
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2021~2022, Els_kom org.
+﻿// Copyright (c) 2021~2022, Els_kom org.
 // https://github.com/Elskom/
 // All rights reserved.
 // license: MIT, see LICENSE for more details.
@@ -9,9 +9,9 @@ using Internal;
 using Exceptions;
 
 /// <summary>
-/// Zlib Memory Compression and Decompression Class.
+/// Common zlib checks.
 /// </summary>
-public static unsafe class MemoryZlib
+public static unsafe class Checks
 {
     /// <summary>
     /// Gets or sets the native zlib version to use.
@@ -20,90 +20,6 @@ public static unsafe class MemoryZlib
     /// Default: Version 1.2.13.
     /// </remarks>
     public static string NativeZlibVersion { get; set; } = "1.2.13";
-
-    /// <summary>
-    /// Compresses data using the user specified compression level.
-    /// </summary>
-    /// <param name="sourcePath">The path to the file to compress.</param>
-    /// <param name="dest">The compressed data buffer.</param>
-    /// <param name="compressionLevel">The compression level to use to compress the file.</param>
-    /// <param name="windowBits">The window bits to use to compress the data.</param>
-    /// <param name="strategy">The compression strategy to use to compress the data.</param>
-    /// <exception cref="NotPackableException">
-    /// Thrown when zlib errors internally in any way.
-    /// </exception>
-    /// <returns>
-    /// The zlib result structure that contains the amount of bytes read, written,
-    /// and the adler32 hash of the data that can be used to compare the integrity
-    /// of the compressed/decompressed results.
-    /// </returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ZlibResult Compress(string sourcePath, Span<byte> dest, ZlibCompressionLevel compressionLevel = ZlibCompressionLevel.DefaultCompression, ZlibWindowBits windowBits = ZlibWindowBits.Zlib, ZlibCompressionStrategy strategy = ZlibCompressionStrategy.Default)
-        => Compress(File.ReadAllBytes(sourcePath), dest, compressionLevel, windowBits, strategy);
-
-    /// <summary>
-    /// Compresses data using the user specified compression level.
-    /// </summary>
-    /// <param name="source">The input data buffer.</param>
-    /// <param name="dest">The compressed data buffer.</param>
-    /// <param name="compressionLevel">The compression level to use to compress the data.</param>
-    /// <param name="windowBits">The window bits to use to compress the data.</param>
-    /// <param name="strategy">The compression strategy to use to compress the data.</param>
-    /// <exception cref="NotPackableException">
-    /// Thrown when zlib errors internally in any way.
-    /// </exception>
-    /// <returns>
-    /// The zlib result structure that contains the amount of bytes read, written,
-    /// and the adler32 hash of the data that can be used to compare the integrity
-    /// of the compressed/decompressed results.
-    /// </returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ZlibResult Compress(ReadOnlySpan<byte> source, Span<byte> dest, ZlibCompressionLevel compressionLevel = ZlibCompressionLevel.DefaultCompression, ZlibWindowBits windowBits = ZlibWindowBits.Zlib, ZlibCompressionStrategy strategy = ZlibCompressionStrategy.Default)
-    {
-        var bytesWritten = ZlibHelper.Compress(source, dest, compressionLevel, windowBits, strategy, out var adler32);
-        return new(bytesWritten, 0, adler32);
-    }
-
-    /// <summary>
-    /// Decompresses a file.
-    /// </summary>
-    /// <param name="sourcePath">The path to the file to decompress.</param>
-    /// <param name="dest">The decompressed data buffer.</param>
-    /// <param name="windowBits">The window bits to use to decompress the data.</param>
-    /// <exception cref="NotUnpackableException">
-    /// Thrown when zlib errors internally in any way.
-    /// </exception>
-    /// <returns>
-    /// The zlib result structure that contains the amount of bytes read, written,
-    /// and the adler32 hash of the data that can be used to compare the integrity
-    /// of the compressed/decompressed results.
-    /// </returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ZlibResult Decompress(string sourcePath, Span<byte> dest, ZlibWindowBits windowBits = ZlibWindowBits.Zlib)
-        => Decompress(File.ReadAllBytes(sourcePath), dest, windowBits);
-
-    /// <summary>
-    /// Decompresses data.
-    /// </summary>
-    /// <param name="source">The compressed input data.</param>
-    /// <param name="dest">The decompressed data buffer.</param>
-    /// <param name="windowBits">The window bits to use to decompress the data.</param>
-    /// <exception cref="NotUnpackableException">
-    /// Thrown when zlib errors internally in any way.
-    /// </exception>
-    /// <returns>
-    /// The zlib result structure that contains the amount of bytes read, written,
-    /// and the adler32 hash of the data that can be used to compare the integrity
-    /// of the compressed/decompressed results.
-    /// </returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ZlibResult Decompress(ReadOnlySpan<byte> source, Span<byte> dest, ZlibWindowBits windowBits = ZlibWindowBits.Zlib)
-    {
-        var bytesRead = ZlibHelper.Decompress(source, dest, out var bytesWritten, out var adler32, windowBits);
-        return new ZlibResult(bytesWritten, bytesRead, adler32);
-    }
-
-    // NEW: GZip compression check.
 
     /// <summary>
     /// Check data for compression by gzip.
@@ -169,8 +85,8 @@ public static unsafe class MemoryZlib
     /// </summary>
     /// <returns>The version string to this version of ZlibSharp.</returns>
     public static string ZlibSharpVersion()
-        // => typeof(MemoryZlib).Assembly.GetName().Version!.ToString(3);
-        => typeof(MemoryZlib).Assembly.GetName().Version!.ToString(4);
+        // => typeof(Checks).Assembly.GetName().Version!.ToString(3);
+        => typeof(Checks).Assembly.GetName().Version!.ToString(4);
 
     /// <summary>
     /// Gets the version to the imported native zlib library.
@@ -229,7 +145,12 @@ public static unsafe class MemoryZlib
     public static uint GetCompressedSize(ReadOnlySpan<byte> source, ZlibCompressionLevel compressionLevel = ZlibCompressionLevel.DefaultCompression, ZlibWindowBits windowBits = ZlibWindowBits.Zlib)
     {
         var discard = new byte[source.Length];
-        var result = Compress(source, discard, compressionLevel, windowBits);
+        var encoder = new ZlibEncoder()
+        {
+            CompressionLevel = compressionLevel,
+            WindowBits = windowBits,
+        };
+        var result = encoder.Compress(source, discard);
         return result.BytesWritten;
     }
 
@@ -245,7 +166,8 @@ public static unsafe class MemoryZlib
     public static uint GetDecompressedSize(ReadOnlySpan<byte> source, ZlibWindowBits windowBits = ZlibWindowBits.Zlib)
     {
         var discard = new byte[Array.MaxLength];
-        var result = Decompress(source, discard, windowBits);
+        var decoder = new ZlibDecoder(windowBits);
+        var result = decoder.Decompress(source, discard);
         return result.BytesWritten;
     }
 }

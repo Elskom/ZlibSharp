@@ -1,5 +1,9 @@
 ﻿<Project>
 
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="elskom.zlib.redist.win" Version="1.2.13" />
     <PackageReference Include="elskom.zlib.redist.linux" Version="1.2.13" />
