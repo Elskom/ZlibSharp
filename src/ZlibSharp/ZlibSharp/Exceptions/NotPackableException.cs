@@ -37,6 +37,7 @@ public sealed class NotPackableException : IOException
     /// </summary>
     /// <param name="info">The data for serializing or deserializing the object.</param>
     /// <param name="context">The source and destination for the object.</param>
+    [Obsolete("This API supports obsolete formatter-based serialization. It should not be called or extended by application code.", DiagnosticId = "SYSLIB0051", UrlFormat = "https://aka.ms/dotnet-warnings/{0}")]
     private NotPackableException(SerializationInfo info, StreamingContext context)
         : base(info, context)
     {

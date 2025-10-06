@@ -5,6 +5,9 @@
 
 namespace ZlibSharp;
 
+using System.Buffers;
+using ZlibSharp.Internal;
+
 /// <summary>
 /// The zlib result structure that contains the amount of bytes read, written,
 /// and the adler32 hash of the data that can be used to compare the integrity
@@ -12,22 +15,21 @@ namespace ZlibSharp;
 /// </summary>
 public readonly struct ZlibResult
 {
-    internal ZlibResult(uint bytesWritten, uint bytesRead, uint adler32, uint crc32, ZlibStatus status)
+    internal ZlibResult(uint bytesWritten, uint bytesRead, uint hash, ZlibStatus status)
     {
         this.BytesWritten = bytesWritten;
         this.BytesRead = bytesRead;
-        this.Adler32 = adler32;
-        this.Crc32 = crc32;
-        this.Status = status;
+        this.Hash = hash;
+        this.Status = status.ToOperationStatus();
     }
 
     /// <summary>
-    /// The amount of bytes written to the destination buffer.
+    /// Gets the amount of bytes written to the destination buffer.
     /// </summary>
     public uint BytesWritten { get; }
 
     /// <summary>
-    /// The amount of data available from the source buffer, allowing users to reallocate
+    /// Gets the amount of data available from the source buffer, allowing users to reallocate
     /// and continue decompressing the remaining data.
     /// </summary>
     /// <remarks>
@@ -36,17 +38,14 @@ public readonly struct ZlibResult
     public uint BytesRead { get; }
 
     /// <summary>
-    /// The Adler32 checksum of the compressed/decompressed data.
+    /// Gets the Adler32 checksum of the compressed/decompressed data if
+    /// it was compressed/decompressed with <see cref="ZlibWindowBits.Deflate" />
+    /// or <see cref="ZlibWindowBits.Zlib" />, the Crc32 checksum otherwise.
     /// </summary>
-    public uint Adler32 { get; }
-
-    /// <summary>
-    /// The Crc32 checksum of the compressed/decompressed data.
-    /// </summary>
-    public uint Crc32 { get; }
+    public uint Hash { get; }
 
     /// <summary>
     /// The resulting status code from zlib.
     /// </summary>
-    public ZlibStatus Status { get; }
+    public OperationStatus Status { get; }
 }

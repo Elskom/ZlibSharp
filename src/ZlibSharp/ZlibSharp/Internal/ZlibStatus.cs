@@ -3,12 +3,12 @@
 // All rights reserved.
 // license: MIT, see LICENSE for more details.
 
-namespace ZlibSharp;
+namespace ZlibSharp.Internal;
 
 /// <summary>
 /// The possible status codes from zlib.
 /// </summary>
-public enum ZlibStatus
+internal enum ZlibStatus
 {
     /// <summary>
     /// Version error.

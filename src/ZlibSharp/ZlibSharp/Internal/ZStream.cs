@@ -16,7 +16,7 @@ internal unsafe struct ZStream
     internal byte* next_out;
     internal uint avail_out;
     internal CULong total_out;
-    internal byte* msg;
+    internal sbyte* msg;
     private readonly internal_state* state; // not visible by applications.
 
     internal delegate* unmanaged[Cdecl]<void*, uint, uint, void*> zalloc;

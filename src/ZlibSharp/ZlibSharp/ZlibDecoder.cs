@@ -11,12 +11,23 @@ using Exceptions;
 /// <summary>
 /// Zlib Memory Decompression class.
 /// </summary>
-/// <param name="WindowBits"> Gets or sets the window bits to use to decompress the data. </param>
-public record ZlibDecoder(ZlibWindowBits WindowBits)
+public class ZlibDecoder
 {
-    public ZlibDecoder() : this(ZlibWindowBits.Zlib)
-    {
-    }
+    private static readonly Lazy<ZlibDecoder> _default = new(() => new ZlibDecoder());
+
+    internal ZlibDecoder()
+        => this.Options = new ZlibOptions();
+
+    /// <summary>
+    /// Gets the default instance of the <see cref="ZlibDecoder" /> class.
+    /// </summary>
+    public static ZlibDecoder Default
+        => _default.Value;
+
+    /// <summary>
+    /// Gets or sets the options to use to decompress the data.
+    /// </summary>
+    public ZlibOptions Options { get; internal set; }
 
     /// <summary>
     /// Decompresses a file.
@@ -32,7 +43,7 @@ public record ZlibDecoder(ZlibWindowBits WindowBits)
     /// <see langword="true"/> if the compression was a success, <see langword="false"/> otherwise.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryDecompress(string sourcePath, Span<byte> dest, out ZlibResult? result)
+    public bool TryDecompress(string sourcePath, Span<byte> dest, out ZlibResult result)
         => this.TryDecompress(File.ReadAllBytes(sourcePath), dest, out result);
 
     /// <summary>
@@ -49,7 +60,7 @@ public record ZlibDecoder(ZlibWindowBits WindowBits)
     /// <see langword="true"/> if the compression was a success, <see langword="false"/> otherwise.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryDecompress(ReadOnlySpan<byte> source, Span<byte> dest, out ZlibResult? result)
+    public bool TryDecompress(ReadOnlySpan<byte> source, Span<byte> dest, out ZlibResult result)
     {
         try
         {
@@ -58,7 +69,7 @@ public record ZlibDecoder(ZlibWindowBits WindowBits)
         }
         catch (NotUnpackableException)
         {
-            result = null;
+            result = default;
             return false;
         }
     }
@@ -96,7 +107,19 @@ public record ZlibDecoder(ZlibWindowBits WindowBits)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ZlibResult Decompress(ReadOnlySpan<byte> source, Span<byte> dest)
     {
-        var bytesRead = ZlibHelper.Decompress(source, dest, out var bytesWritten, out var adler32, out var crc32, out var status, this.WindowBits);
-        return new ZlibResult(bytesWritten, bytesRead, adler32, crc32, status);
+        var bytesRead = ZlibHelper.Decompress(source, dest, out var bytesWritten, out var hash, out var status, this.Options.WindowBits);
+        return new ZlibResult(bytesWritten, bytesRead, hash, status);
     }
+
+    /// <summary>
+    /// Computes an Adler32 Hash if the Window Bits in <see cref="Options" /> is
+    /// <see cref="ZlibWindowBits.Deflate" /> or <see cref="ZlibWindowBits.Zlib" />,
+    /// a CRC32 Hash otherwise.
+    /// </summary>
+    /// <param name="source">The input data to hash.</param>
+    /// <returns>The computed Adler32 or Crc32 Hash.</returns>
+    public uint ComputeHash(ReadOnlySpan<byte> source)
+        => !this.Options.WindowBits.Equals(ZlibWindowBits.GZip)
+            ? (uint)(ZlibHelper.GetAdler32(source) & 0xFFFFFFFF)
+            : (uint)(ZlibHelper.GetCrc32(source) & 0xFFFFFFFF);
 }

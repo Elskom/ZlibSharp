@@ -11,33 +11,23 @@ using Exceptions;
 /// <summary>
 /// Zlib Memory Compression class.
 /// </summary>
-public record ZlibEncoder
+public class ZlibEncoder
 {
-    public ZlibEncoder() : this(ZlibCompressionLevel.DefaultCompression, ZlibWindowBits.Zlib, ZlibCompressionStrategy.Default)
-    {
-    }
+    private static readonly Lazy<ZlibEncoder> _default = new(() => new ZlibEncoder());
 
-    public ZlibEncoder(ZlibCompressionLevel compressionLevel, ZlibWindowBits windowBits, ZlibCompressionStrategy strategy)
-    {
-        this.CompressionLevel = compressionLevel;
-        this.WindowBits = windowBits;
-        this.Strategy = strategy;
-    }
+    internal ZlibEncoder()
+        => this.Options = new ZlibOptions();
 
     /// <summary>
-    /// Gets or sets the compression level to use to compress the file.
+    /// Gets the default instance of the <see cref="ZlibEncoder" /> class.
     /// </summary>
-    public ZlibCompressionLevel CompressionLevel { get; set; }
+    public static ZlibEncoder Default
+        => _default.Value;
 
     /// <summary>
-    /// Gets or sets the window bits to use to compress the data.
+    /// Gets or sets the options to use to compress the file.
     /// </summary>
-    public ZlibWindowBits WindowBits { get; set; }
-
-    /// <summary>
-    /// Gets or sets the compression strategy to use to compress the data.
-    /// </summary>
-    public ZlibCompressionStrategy Strategy { get; set; }
+    public ZlibOptions Options { get; internal set; }
 
     /// <summary>
     /// Tries to compress a file using the user specified compression level.
@@ -55,7 +45,7 @@ public record ZlibEncoder
     /// <see langword="true"/> if the compression was a success, <see langword="false"/> otherwise.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryCompress(string sourcePath, Span<byte> dest, out ZlibResult? result)
+    public bool TryCompress(string sourcePath, Span<byte> dest, out ZlibResult result)
         => this.TryCompress(File.ReadAllBytes(sourcePath), dest, out result);
 
     /// <summary>
@@ -74,19 +64,8 @@ public record ZlibEncoder
     /// <see langword="true"/> if the compression was a success, <see langword="false"/> otherwise.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryCompress(ReadOnlySpan<byte> source, Span<byte> dest, out ZlibResult? result)
-    {
-        try
-        {
-            result = this.Compress(source, dest);
-            return true;
-        }
-        catch (NotPackableException)
-        {
-            result = null;
-            return false;
-        }
-    }
+    public bool TryCompress(ReadOnlySpan<byte> source, Span<byte> dest, out ZlibResult result)
+        => this.TryCompressCore(source, dest, out result);
 
     /// <summary>
     /// Compresses a file using the user specified compression level.
@@ -121,7 +100,35 @@ public record ZlibEncoder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ZlibResult Compress(ReadOnlySpan<byte> source, Span<byte> dest)
     {
-        var bytesWritten = ZlibHelper.Compress(source, dest, this.CompressionLevel, this.WindowBits, this.Strategy, out var adler32, out var crc32, out var status);
-        return new(bytesWritten, 0, adler32, crc32, status);
+        var bytesWritten = ZlibHelper.Compress(source, dest, this.Options.CompressionLevel, this.Options.WindowBits, this.Options.Strategy, out var hash, out var status);
+        return new(bytesWritten, 0, hash, status);
+    }
+
+    /// <summary>
+    /// Computes an Adler32 Hash if the Window Bits in <see cref="Options" /> is
+    /// <see cref="ZlibWindowBits.Deflate" /> or <see cref="ZlibWindowBits.Zlib" />,
+    /// a Crc32 Hash otherwise.
+    /// </summary>
+    /// <param name="source">The input data to hash.</param>
+    /// <returns>The computed Adler32 or Crc32 Hash.</returns>
+    public uint ComputeHash(ReadOnlySpan<byte> source)
+        => !this.Options.WindowBits.Equals(ZlibWindowBits.GZip)
+            ? (uint)(ZlibHelper.GetAdler32(source) & 0xFFFFFFFF)
+            : (uint)(ZlibHelper.GetCrc32(source) & 0xFFFFFFFF);
+
+    [ExcludeFromCodeCoverage]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool TryCompressCore(ReadOnlySpan<byte> source, Span<byte> dest, out ZlibResult result)
+    {
+        try
+        {
+            result = this.Compress(source, dest);
+            return true;
+        }
+        catch (NotPackableException)
+        {
+            result = default;
+            return false;
+        }
     }
 }
