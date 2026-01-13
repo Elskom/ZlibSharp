@@ -21,7 +21,7 @@ public class Test
         // var destBuffer = new byte[sourceString.Length];
         lengthOfCompressed = (int)ZlibEncoder.Default.GetCompressedSize(sourceString);
         sourceStringCompressed = new byte[lengthOfCompressed];
-        ZlibEncoder.Default.Compress(sourceString, sourceStringCompressed, out _, out _, out _);
+        _ = ZlibEncoder.Default.Compress(sourceString, sourceStringCompressed, out _, out _);
         // destBuffer.AsSpan(0, lengthOfCompressed).CopyTo(sourceStringCompressed);
         sourceBuffer = new byte[sourceString.Length];
     }
@@ -31,7 +31,7 @@ public class Test
     {
         var destBuffer = new byte[sourceString.Length];
         ZlibEncoder.Default.Options.CompressionLevel = ZlibCompressionLevel.Level7;
-        ZlibEncoder.Default.Compress("SourceText.txt", destBuffer, out var bytesWritten, out var hash, out var status);
+        var status = ZlibEncoder.Default.Compress("SourceText.txt", destBuffer, out var bytesWritten, out var hash);
         _ = bytesWritten.Should().BeGreaterThan(0);
         _ = hash.Should().BeGreaterThan(0);
         _ = status.Should().Be(OperationStatus.Done);
@@ -45,7 +45,7 @@ public class Test
     public void DecompressFileWorks()
     {
         var destBuffer = new byte[sourceString.Length];
-        ZlibDecoder.Default.Decompress("CompressedText.txt", destBuffer, out _, out var bytesRead, out _, out var status);
+        var status = ZlibDecoder.Default.Decompress("CompressedText.txt", destBuffer, out _, out var bytesRead, out _);
         _ = bytesRead.Should().BeGreaterThan(0);
         _ = status.Should().Be(OperationStatus.Done);
         _ = destBuffer.Should().Equal(sourceString);
@@ -58,7 +58,7 @@ public class Test
     [Fact]
     public void DecompressionWorks()
     {
-        ZlibDecoder.Default.Decompress(sourceStringCompressed, sourceBuffer, out _, out var bytesRead, out var hash, out var status);
+        var status = ZlibDecoder.Default.Decompress(sourceStringCompressed, sourceBuffer, out _, out var bytesRead, out var hash);
         _ = bytesRead.Should().Be(0);
         _ = hash.Should().BeGreaterThan(0);
         _ = status.Should().Be(OperationStatus.Done);
@@ -75,7 +75,13 @@ public class Test
         _ = undersizedBufferLength.Should().BeLessThan((int)ZlibDecoder.Default.GetDecompressedSize(sourceStringCompressed));
         var undersizedDestBuffer = new byte[undersizedBufferLength];
         Assert.Throws<NotUnpackableException>(
-            [ExcludeFromCodeCoverage] () => ZlibDecoder.Default.Decompress(sourceStringCompressed, undersizedDestBuffer, out _, out _, out _, out _));
+            [ExcludeFromCodeCoverage] () => {
+                var status = ZlibDecoder.Default.Decompress(sourceStringCompressed, undersizedDestBuffer, out _, out _, out _);
+                if (status != OperationStatus.Done)
+                {
+                    throw new NotUnpackableException($"Decompression failed with status: {status}");
+                }
+            });
 
         // Test TryDecompress as well to ensure it returns false here.
         ZlibDecoder.Default.TryDecompress(sourceStringCompressed, undersizedDestBuffer, out _, out _, out _, out _).Should().BeFalse();
@@ -87,7 +93,7 @@ public class Test
         const int undersizedBufferLength = 69;
         _ = undersizedBufferLength.Should().BeLessThan(lengthOfCompressed);
         var undersizedDestBuffer = new byte[undersizedBufferLength];
-        ZlibEncoder.Default.Compress(sourceStringCompressed, undersizedDestBuffer, out var bytesWritten, out _, out _);
+        _ = ZlibEncoder.Default.Compress(sourceStringCompressed, undersizedDestBuffer, out var bytesWritten, out _);
         _ = bytesWritten.Should().NotBe(0);
         _ = ZlibEncoder.Default.TryCompress(sourceStringCompressed, undersizedDestBuffer, out _, out _, out _).Should().BeTrue();
     }
@@ -98,7 +104,7 @@ public class Test
         const uint oversizeBy = 69;
         var sourceLength = ZlibDecoder.Default.GetDecompressedSize(sourceStringCompressed);
         var oversizedDestBuffer = new byte[sourceLength + oversizeBy];
-        ZlibDecoder.Default.Decompress(sourceStringCompressed, oversizedDestBuffer, out var bytesWritten, out var bytesRead, out _, out var status);
+        var status = ZlibDecoder.Default.Decompress(sourceStringCompressed, oversizedDestBuffer, out var bytesWritten, out var bytesRead, out _);
         _ = bytesRead.Should().Be(0);
         _ = bytesWritten.Should().Be(sourceLength);
         _ = status.Should().Be(OperationStatus.Done);
@@ -127,7 +133,7 @@ public class Test
         var oldWindowBits = ZlibEncoder.Default.Options.WindowBits;
         var destBuffer = new byte[ZlibEncoder.Default.GetCompressedSize(sourceString)];
         ZlibEncoder.Default.Options.WindowBits = ZlibWindowBits.GZip;
-        ZlibEncoder.Default.Compress(sourceString, destBuffer, out _, out _, out _);
+        _ = ZlibEncoder.Default.Compress(sourceString, destBuffer, out _, out _);
         _ = ZlibDecoder.Default.IsCompressedByGZip(destBuffer).Should().BeTrue();
         ZlibEncoder.Default.Options.WindowBits = oldWindowBits;
     }

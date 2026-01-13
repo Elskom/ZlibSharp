@@ -5,6 +5,7 @@
 
 namespace ZlibSharp.Internal;
 
+/*
 [ExcludeFromCodeCoverage]
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct ZStream
@@ -28,3 +29,4 @@ internal unsafe struct ZStream
     internal CULong adler;
     internal CULong reserved; // reserved for future use in zlib.
 }
+*/

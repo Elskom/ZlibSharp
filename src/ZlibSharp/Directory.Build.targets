@@ -6,6 +6,7 @@
     <Using Include="System.Runtime.Serialization" />
     <Using Include="System.Runtime.CompilerServices" />
     <Using Include="System.Text" />
+    <None Include="bin\$(Configuration)\$(TargetFramework)\runtimes\**\*.*" Pack="true" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

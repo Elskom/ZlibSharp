@@ -5,6 +5,7 @@
 
 namespace ZlibSharp.Internal;
 
+/*
 internal enum ZlibFlushStrategy
 {
     NoFlush,
@@ -15,3 +16,4 @@ internal enum ZlibFlushStrategy
     Block,
     Trees,
 }
+*/

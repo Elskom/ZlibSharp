@@ -73,13 +73,12 @@ public class ZlibEncoder
     /// <param name="hash">The Adler32 checksum of the compressed data if
     /// it was compressed with <see cref="ZlibWindowBits.Deflate" />
     /// or <see cref="ZlibWindowBits.Zlib" />, the Crc32 checksum otherwise.</param>
-    /// <param name="status">The resulting status code from zlib.</param>
-    /// <exception cref="NotPackableException">
-    /// Thrown when zlib errors internally in any way.
-    /// </exception>
+    /// <returns>
+    /// The resulting status code from zlib.
+    /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Compress(string sourcePath, Span<byte> dest, out uint bytesWritten, out uint hash, out OperationStatus status)
-        => this.Compress(File.ReadAllBytes(sourcePath), dest, out bytesWritten, out hash, out status);
+    public OperationStatus Compress(string sourcePath, Span<byte> dest, out uint bytesWritten, out uint hash)
+        => this.Compress(File.ReadAllBytes(sourcePath), dest, out bytesWritten, out hash);
 
     /// <summary>
     /// Compresses data using the user specified compression level.
@@ -90,38 +89,28 @@ public class ZlibEncoder
     /// <param name="hash">The Adler32 checksum of the compressed/decompressed data if
     /// it was compressed/decompressed with <see cref="ZlibWindowBits.Deflate" />
     /// or <see cref="ZlibWindowBits.Zlib" />, the Crc32 checksum otherwise.</param>
-    /// <param name="status">The resulting status code from zlib.</param>
-    /// <exception cref="NotPackableException">
-    /// Thrown when zlib errors internally in any way.
-    /// </exception>
+    /// <returns>
+    /// The resulting status code from zlib.
+    /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Compress(ReadOnlySpan<byte> source, Span<byte> dest, out uint bytesWritten, out uint hash, out OperationStatus status)
-        => this.CompressCore(source, dest, out bytesWritten, out hash, out status);
+    public OperationStatus Compress(ReadOnlySpan<byte> source, Span<byte> dest, out uint bytesWritten, out uint hash)
+        => this.CompressCore(source, dest, out bytesWritten, out hash);
 
     [ExcludeFromCodeCoverage]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void CompressCore(ReadOnlySpan<byte> source, Span<byte> dest, out uint bytesWritten, out uint hash, out OperationStatus status)
+    private OperationStatus CompressCore(ReadOnlySpan<byte> source, Span<byte> dest, out uint bytesWritten, out uint hash)
     {
         bytesWritten = ZlibHelper.Compress(source, dest, this.Options.CompressionLevel, this.Options.WindowBits, this.Options.Strategy, out var zstatus);
         hash = this.Options.HashAlgorithm.ComputeHash(source);
-        status = zstatus.ToOperationStatus();
+        var status = zstatus.ToOperationStatus();
+        return status;
     }
 
     [ExcludeFromCodeCoverage]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool TryCompressCore(ReadOnlySpan<byte> source, Span<byte> dest, out uint bytesWritten, out uint hash, out OperationStatus status)
     {
-        try
-        {
-            this.CompressCore(source, dest, out bytesWritten, out hash, out status);
-            return true;
-        }
-        catch (NotPackableException)
-        {
-            bytesWritten = default;
-            hash = default;
-            status = default;
-            return false;
-        }
+        status = this.CompressCore(source, dest, out bytesWritten, out hash);
+        return status == OperationStatus.Done;
     }
 }

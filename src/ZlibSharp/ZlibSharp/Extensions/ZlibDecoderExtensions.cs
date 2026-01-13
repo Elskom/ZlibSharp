@@ -17,9 +17,6 @@ public static class ZlibDecoderExtensions
     /// </summary>
     /// <param name="decoder">The <see cref="ZlibDecoder" /> instance to use.</param>
     /// <param name="source">The compressed input data.</param>
-    /// <exception cref="NotUnpackableException">
-    /// Thrown when zlib errors internally in any way.
-    /// </exception>
     /// <returns>The size of the data when it is decompressed.</returns>
     public static uint GetDecompressedSize(this ZlibDecoder decoder, ReadOnlySpan<byte> source)
     {

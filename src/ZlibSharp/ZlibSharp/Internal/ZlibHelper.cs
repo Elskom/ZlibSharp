@@ -5,22 +5,25 @@
 
 namespace ZlibSharp.Internal;
 
-using ZlibSharp.Exceptions;
-
 [ExcludeFromCodeCoverage]
 internal static unsafe class ZlibHelper
 {
     private static bool zlibResolverAdded;
 
-    internal static string ZlibLibFileName
-        => (OperatingSystem.IsWindows(), OperatingSystem.IsLinux() || OperatingSystem.IsFreeBSD() || OperatingSystem.IsAndroid(), OperatingSystem.IsMacOS() || OperatingSystem.IsMacCatalyst(), OperatingSystem.IsIOS() && !OperatingSystem.IsMacCatalyst()) switch
-        {
-            (true, false, false, false) => "ZlibSharp.Native.dll",
-            (false, true, false, false) => "libZlibSharp.Native.so",
-            (false, false, true, false) => "libZlibSharp.Native.dylib",
-            (false, false, false, true) => "__Internal",
-            _ => throw new PlatformNotSupportedException("Zlib is probably not supported on this platform."),
-        };
+    // internal static string ZlibLibFileName
+    //     => (OperatingSystem.IsWindows(), OperatingSystem.IsLinux() || OperatingSystem.IsFreeBSD() || OperatingSystem.IsAndroid(), OperatingSystem.IsMacOS() || OperatingSystem.IsMacCatalyst(), OperatingSystem.IsIOS() && !OperatingSystem.IsMacCatalyst()) switch
+    //     {
+    //         (true, false, false, false) => "ZlibSharp.Native.dll",
+    //         (false, true, false, false) => "libZlibSharp.Native.so",
+    //         (false, false, true, false) => "libZlibSharp.Native.dylib",
+    //         (false, false, false, true) => "__Internal",
+    //         _ => throw new PlatformNotSupportedException("Zlib is probably not supported on this platform."),
+    //     };
+#if !TARGET_IOS
+    internal const string ZlibLibFileName = "ZlibSharp.Native";
+#else
+    internal const string ZlibLibFileName = "__Internal";
+#endif
 
     internal static uint Compress(ReadOnlySpan<byte> source, Span<byte> dest, ZlibCompressionLevel compressionLevel, ZlibWindowBits windowBits, ZlibCompressionStrategy strategy, out ZlibStatus status)
     {
@@ -122,18 +125,17 @@ internal static unsafe class ZlibHelper
     //     }
     // }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static ulong GetCrc32(ReadOnlySpan<byte> data)
-    {
-        fixed (byte* dataPtr = data)
-        {
-            return UnsafeNativeMethods.Crc32_ComputeHash(dataPtr);
-            // return UnsafeNativeMethods.crc32(
-            //     UnsafeNativeMethods.crc32(0L, null, 0),
-            //     dataPtr,
-            //     (uint)data.Length);
-        }
-    }
+    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    // internal static ulong GetCrc32(ReadOnlySpan<byte> data)
+    // {
+    //     fixed (byte* dataPtr = data)
+    //     {
+    //         return UnsafeNativeMethods.crc32(
+    //             UnsafeNativeMethods.crc32(0L, null, 0),
+    //             dataPtr,
+    //             (uint)data.Length);
+    //     }
+    // }
 
     private static void PreOperationCheck()
     {

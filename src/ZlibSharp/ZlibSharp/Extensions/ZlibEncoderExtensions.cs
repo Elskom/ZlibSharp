@@ -17,9 +17,6 @@ public static class ZlibEncoderExtensions
     /// </summary>
     /// <param name="encoder">The <see cref="ZlibEncoder" /> instance to use.</param>
     /// <param name="source">The input data buffer.</param>
-    /// <exception cref="NotPackableException">
-    /// Thrown when zlib errors internally in any way.
-    /// </exception>
     /// <returns>The size of the data when it is compressed.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint GetCompressedSize(this ZlibEncoder encoder, ReadOnlySpan<byte> source)

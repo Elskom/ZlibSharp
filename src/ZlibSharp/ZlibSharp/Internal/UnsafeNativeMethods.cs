@@ -53,23 +53,29 @@ internal static unsafe partial class UnsafeNativeMethods
     // [UnmanagedCallConv(CallConvs = new Type[] { typeof(CallConvCdecl) })]
     // internal static partial ulong crc32(ulong crc, byte* buf, uint len);
 
+    // private const DllImportSearchPath searchPaths
+    //     = DllImportSearchPath.UseDllDirectoryForDependencies
+    //     | DllImportSearchPath.ApplicationDirectory
+    //     | DllImportSearchPath.System32
+    //     | DllImportSearchPath.UserDirectories;
+
     [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
-    [LibraryImport("zlib", EntryPoint = "Compress")]
-    [UnmanagedCallConv(CallConvs = new Type[] { typeof(CallConvCdecl) })]
+    [LibraryImport(ZlibHelper.ZlibLibFileName, EntryPoint = "Compress")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial uint Compress(CompressDecompressArgs* args);
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
-    [LibraryImport("zlib", EntryPoint = "Decompress")]
-    [UnmanagedCallConv(CallConvs = new Type[] { typeof(CallConvCdecl) })]
+    [LibraryImport(ZlibHelper.ZlibLibFileName, EntryPoint = "Compress")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial uint Decompress(CompressDecompressArgs* args);
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
-    [LibraryImport("zlib", EntryPoint = "Crc32_ComputeHash")]
-    [UnmanagedCallConv(CallConvs = new Type[] { typeof(CallConvCdecl) })]
+    [LibraryImport(ZlibHelper.ZlibLibFileName, EntryPoint = "Compress")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial ulong Crc32_ComputeHash(byte* source);
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
-    [LibraryImport("zlib", EntryPoint = "Adler32_ComputeHash")]
-    [UnmanagedCallConv(CallConvs = new Type[] { typeof(CallConvCdecl) })]
+    [LibraryImport(ZlibHelper.ZlibLibFileName, EntryPoint = "Compress")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     internal static partial ulong Adler32_ComputeHash(byte* source);
 }

@@ -35,9 +35,9 @@
     <WholeProgramOptimization Condition="'$(Configuration)' == 'Release'">true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <IntDir>obj\$(Configuration)\$(Platform)\</IntDir>
-    <OutDir Condition="'$(Platform)' == 'Win32'">..\ZlibSharp\bin\$(Configuration)\net10.0\runtimes\win-x86\</OutDir>
-    <OutDir Condition="'$(Platform)' == 'x64'">..\ZlibSharp\bin\$(Configuration)\net10.0\runtimes\win-x64\</OutDir>
-    <OutDir Condition="'$(Platform)' == 'ARM64'">..\ZlibSharp\bin\$(Configuration)\net10.0\runtimes\win-arm64\</OutDir>
+    <OutDir Condition="'$(Platform)' == 'Win32'">..\ZlibSharp\bin\$(Configuration)\net10.0\runtimes\win-x86\native\</OutDir>
+    <OutDir Condition="'$(Platform)' == 'x64'">..\ZlibSharp\bin\$(Configuration)\net10.0\runtimes\win-x64\native\</OutDir>
+    <OutDir Condition="'$(Platform)' == 'ARM64'">..\ZlibSharp\bin\$(Configuration)\net10.0\runtimes\win-arm64\native\</OutDir>
   </PropertyGroup>
 
   <ImportGroup Label="PropertySheets">

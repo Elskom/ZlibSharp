@@ -10,6 +10,11 @@ using ZlibSharp.Interfaces;
 internal struct Crc32Hash : ICompressionHash
 {
     // <inheritdoc/>
-    public readonly uint ComputeHash(ReadOnlySpan<byte> source)
-        => unchecked((uint)(ZlibHelper.GetCrc32(source) & 0xFFFFFFFF));
+    public unsafe readonly uint ComputeHash(ReadOnlySpan<byte> source)
+    {
+        fixed (byte* sourcePtr = source)
+        {
+            return unchecked((uint)(UnsafeNativeMethods.Crc32_ComputeHash(sourcePtr) & 0xFFFFFFFF));
+        }
+    }
 }
