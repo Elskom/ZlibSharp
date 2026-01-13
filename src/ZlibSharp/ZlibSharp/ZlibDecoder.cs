@@ -5,8 +5,9 @@
 
 namespace ZlibSharp;
 
-using Internal;
 using Exceptions;
+using Internal;
+using System.Buffers;
 
 /// <summary>
 /// Zlib Memory Decompression class.
@@ -34,51 +35,51 @@ public class ZlibDecoder
     /// </summary>
     /// <param name="sourcePath">The path to the file to decompress.</param>
     /// <param name="dest">The decompressed data buffer.</param>
-    /// <param name="result">
-    /// The zlib result structure that contains the amount of bytes read, written,
-    /// and the adler32 hash of the data that can be used to compare the integrity
-    /// of the compressed/decompressed results.
-    /// </param>
+    /// <param name="bytesWritten">The amount of bytes written to the destination buffer.</param>
+    /// <param name="bytesRead">The amount of data available from the source buffer, allowing users to reallocate
+    /// and continue decompressing the remaining data.</param>
+    /// <param name="hash">The Adler32 checksum of the decompressed data if
+    /// it was decompressed with <see cref="ZlibWindowBits.Deflate" />
+    /// or <see cref="ZlibWindowBits.Zlib" />, the Crc32 checksum otherwise.</param>
+    /// <param name="status">The resulting status code from zlib.</param>
     /// <returns>
     /// <see langword="true"/> if the compression was a success, <see langword="false"/> otherwise.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryDecompress(string sourcePath, Span<byte> dest, out ZlibResult result)
-        => this.TryDecompress(File.ReadAllBytes(sourcePath), dest, out result);
+    public bool TryDecompress(string sourcePath, Span<byte> dest, out uint bytesWritten, out uint bytesRead, out uint hash, out OperationStatus status)
+        => this.TryDecompress(File.ReadAllBytes(sourcePath), dest, out bytesWritten, out bytesRead, out hash, out status);
 
     /// <summary>
     /// Decompresses data.
     /// </summary>
     /// <param name="source">The compressed input data.</param>
     /// <param name="dest">The decompressed data buffer.</param>
-    /// <param name="result">
-    /// The zlib result structure that contains the amount of bytes read, written,
-    /// and the adler32 hash of the data that can be used to compare the integrity
-    /// of the compressed/decompressed results.
-    /// </param>
+    /// <param name="bytesWritten">The amount of bytes written to the destination buffer.</param>
+    /// <param name="bytesRead">The amount of data available from the source buffer, allowing users to reallocate
+    /// and continue decompressing the remaining data.</param>
+    /// <param name="hash">The Adler32 checksum of the decompressed data if
+    /// it was decompressed with <see cref="ZlibWindowBits.Deflate" />
+    /// or <see cref="ZlibWindowBits.Zlib" />, the Crc32 checksum otherwise.</param>
+    /// <param name="status">The resulting status code from zlib.</param>
     /// <returns>
     /// <see langword="true"/> if the compression was a success, <see langword="false"/> otherwise.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryDecompress(ReadOnlySpan<byte> source, Span<byte> dest, out ZlibResult result)
-    {
-        try
-        {
-            result = this.Decompress(source, dest);
-            return true;
-        }
-        catch (NotUnpackableException)
-        {
-            result = default;
-            return false;
-        }
-    }
+    public bool TryDecompress(ReadOnlySpan<byte> source, Span<byte> dest, out uint bytesWritten, out uint bytesRead, out uint hash, out OperationStatus status)
+        => this.TryDecompressCore(source, dest, out bytesWritten, out bytesRead, out hash, out status);
 
     /// <summary>
     /// Decompresses a file.
     /// </summary>
     /// <param name="sourcePath">The path to the file to decompress.</param>
     /// <param name="dest">The decompressed data buffer.</param>
+    /// <param name="bytesWritten">The amount of bytes written to the destination buffer.</param>
+    /// <param name="bytesRead">The amount of data available from the source buffer, allowing users to reallocate
+    /// and continue decompressing the remaining data.</param>
+    /// <param name="hash">The Adler32 checksum of the decompressed data if
+    /// it was decompressed with <see cref="ZlibWindowBits.Deflate" />
+    /// or <see cref="ZlibWindowBits.Zlib" />, the Crc32 checksum otherwise.</param>
+    /// <param name="status">The resulting status code from zlib.</param>
     /// <exception cref="NotUnpackableException">
     /// Thrown when zlib errors internally in any way.
     /// </exception>
@@ -88,14 +89,21 @@ public class ZlibDecoder
     /// of the compressed/decompressed results.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ZlibResult Decompress(string sourcePath, Span<byte> dest)
-        => this.Decompress(File.ReadAllBytes(sourcePath), dest);
+    public void Decompress(string sourcePath, Span<byte> dest, out uint bytesWritten, out uint bytesRead, out uint hash, out OperationStatus status)
+        => this.Decompress(File.ReadAllBytes(sourcePath), dest, out bytesWritten, out bytesRead, out hash, out status);
 
     /// <summary>
     /// Decompresses data.
     /// </summary>
     /// <param name="source">The compressed input data.</param>
     /// <param name="dest">The decompressed data buffer.</param>
+    /// <param name="bytesWritten">The amount of bytes written to the destination buffer.</param>
+    /// <param name="bytesRead">The amount of data available from the source buffer, allowing users to reallocate
+    /// and continue decompressing the remaining data.</param>
+    /// <param name="hash">The Adler32 checksum of the decompressed data if
+    /// it was decompressed with <see cref="ZlibWindowBits.Deflate" />
+    /// or <see cref="ZlibWindowBits.Zlib" />, the Crc32 checksum otherwise.</param>
+    /// <param name="status">The resulting status code from zlib.</param>
     /// <exception cref="NotUnpackableException">
     /// Thrown when zlib errors internally in any way.
     /// </exception>
@@ -105,21 +113,34 @@ public class ZlibDecoder
     /// of the compressed/decompressed results.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ZlibResult Decompress(ReadOnlySpan<byte> source, Span<byte> dest)
+    public void Decompress(ReadOnlySpan<byte> source, Span<byte> dest, out uint bytesWritten, out uint bytesRead, out uint hash, out OperationStatus status)
+        => this.DecompressCore(source, dest, out bytesWritten, out bytesRead, out hash, out status);
+
+    [ExcludeFromCodeCoverage]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void DecompressCore(ReadOnlySpan<byte> source, Span<byte> dest, out uint bytesWritten, out uint bytesRead, out uint hash, out OperationStatus status)
     {
-        var bytesRead = ZlibHelper.Decompress(source, dest, out var bytesWritten, out var hash, out var status, this.Options.WindowBits);
-        return new ZlibResult(bytesWritten, bytesRead, hash, status);
+        bytesRead = ZlibHelper.Decompress(source, dest, out bytesWritten, out var zstatus, this.Options.WindowBits);
+        hash = this.Options.HashAlgorithm.ComputeHash(dest);
+        status = zstatus.ToOperationStatus();
     }
 
-    /// <summary>
-    /// Computes an Adler32 Hash if the Window Bits in <see cref="Options" /> is
-    /// <see cref="ZlibWindowBits.Deflate" /> or <see cref="ZlibWindowBits.Zlib" />,
-    /// a CRC32 Hash otherwise.
-    /// </summary>
-    /// <param name="source">The input data to hash.</param>
-    /// <returns>The computed Adler32 or Crc32 Hash.</returns>
-    public uint ComputeHash(ReadOnlySpan<byte> source)
-        => !this.Options.WindowBits.Equals(ZlibWindowBits.GZip)
-            ? (uint)(ZlibHelper.GetAdler32(source) & 0xFFFFFFFF)
-            : (uint)(ZlibHelper.GetCrc32(source) & 0xFFFFFFFF);
+    [ExcludeFromCodeCoverage]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool TryDecompressCore(ReadOnlySpan<byte> source, Span<byte> dest, out uint bytesWritten, out uint bytesRead, out uint hash, out OperationStatus status)
+    {
+        try
+        {
+            this.DecompressCore(source, dest, out bytesWritten, out bytesRead, out hash, out status);
+            return true;
+        }
+        catch (NotUnpackableException)
+        {
+            bytesWritten = default;
+            bytesRead = default;
+            hash = default;
+            status = default;
+            return false;
+        }
+    }
 }

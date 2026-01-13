@@ -3,7 +3,7 @@
   <Import Project="../../Directory.Build.props" />
 
   <PropertyGroup>
-    <Version>1.2.13.5</Version>
+    <Version>1.2.13.6</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageReleaseNotes>
@@ -15,8 +15,7 @@
       - The ZlibEncoder and ZlibDecoder classes now contain a ComputeHash method.
       - The properties of ZlibEncoder and ZlibDecoder are now simplified to provide an Options property that contains all the options for the encoder/decoder.
       - A new ZlibOptions class which contains all the options for the encoder/decoder.
-      - The ZlibResult class's Status property is now of type OperationStatus.
-      - The ZlibResult class's Crc32 and Adler32 properties have been combined into a single hash property.
+      - The ZlibResult class has been removed and replaced with output parameters in the ZlibEncoder and ZlibDecoder classes.
     </PackageReleaseNotes>
     <Description>
       A high performance .NET zlib wrapper that is span based and offers more functionality over System.IO.Compression by allowing more developer control over how the data is compressed and by avoiding .NET's streams entirely.

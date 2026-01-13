@@ -7,6 +7,7 @@ namespace ZlibSharp;
 
 using Internal;
 using Exceptions;
+using System.Buffers;
 
 /// <summary>
 /// Zlib Memory Compression class.
@@ -34,100 +35,92 @@ public class ZlibEncoder
     /// </summary>
     /// <param name="sourcePath">The path to the file to compress.</param>
     /// <param name="dest">The compressed data buffer.</param>
-    /// <param name="result">
-    /// The zlib result structure that contains the amount of bytes read, written,
-    /// and the adler32 hash of the data that can be used to compare the integrity
-    /// of the compressed/decompressed results.
-    ///
-    /// If the compression failed this is set to <see langword="null"/>.
-    /// </param>
+    /// <param name="bytesWritten">The amount of bytes written to the destination buffer.</param>
+    /// <param name="hash">The Adler32 checksum of the compressed data if
+    /// it was compressed with <see cref="ZlibWindowBits.Deflate" />
+    /// or <see cref="ZlibWindowBits.Zlib" />, the Crc32 checksum otherwise.</param>
+    /// <param name="status">The resulting status code from zlib.</param>
     /// <returns>
     /// <see langword="true"/> if the compression was a success, <see langword="false"/> otherwise.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryCompress(string sourcePath, Span<byte> dest, out ZlibResult result)
-        => this.TryCompress(File.ReadAllBytes(sourcePath), dest, out result);
+    public bool TryCompress(string sourcePath, Span<byte> dest, out uint bytesWritten, out uint hash, out OperationStatus status)
+        => this.TryCompress(File.ReadAllBytes(sourcePath), dest, out bytesWritten, out hash, out status);
 
     /// <summary>
     /// Tries to compress the data using the user specified compression level.
     /// </summary>
     /// <param name="source">The input data buffer.</param>
     /// <param name="dest">The compressed data buffer.</param>
-    /// <param name="result">
-    /// The zlib result structure that contains the amount of bytes read, written,
-    /// and the adler32 hash of the data that can be used to compare the integrity
-    /// of the compressed/decompressed results.
-    ///
-    /// If the compression failed this is set to <see langword="null"/>.
-    /// </param>
+    /// <param name="bytesWritten">The amount of bytes written to the destination buffer.</param>
+    /// <param name="hash">The Adler32 checksum of the compressed data if
+    /// it was compressed with <see cref="ZlibWindowBits.Deflate" />
+    /// or <see cref="ZlibWindowBits.Zlib" />, the Crc32 checksum otherwise.</param>
+    /// <param name="status">The resulting status code from zlib.</param>
     /// <returns>
     /// <see langword="true"/> if the compression was a success, <see langword="false"/> otherwise.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryCompress(ReadOnlySpan<byte> source, Span<byte> dest, out ZlibResult result)
-        => this.TryCompressCore(source, dest, out result);
+    public bool TryCompress(ReadOnlySpan<byte> source, Span<byte> dest, out uint bytesWritten, out uint hash, out OperationStatus status)
+        => this.TryCompressCore(source, dest, out bytesWritten, out hash, out status);
 
     /// <summary>
     /// Compresses a file using the user specified compression level.
     /// </summary>
     /// <param name="sourcePath">The path to the file to compress.</param>
     /// <param name="dest">The compressed data buffer.</param>
+    /// <param name="bytesWritten">The amount of bytes written to the destination buffer.</param>
+    /// <param name="hash">The Adler32 checksum of the compressed data if
+    /// it was compressed with <see cref="ZlibWindowBits.Deflate" />
+    /// or <see cref="ZlibWindowBits.Zlib" />, the Crc32 checksum otherwise.</param>
+    /// <param name="status">The resulting status code from zlib.</param>
     /// <exception cref="NotPackableException">
     /// Thrown when zlib errors internally in any way.
     /// </exception>
-    /// <returns>
-    /// The zlib result structure that contains the amount of bytes read, written,
-    /// and the adler32 hash of the data that can be used to compare the integrity
-    /// of the compressed/decompressed results.
-    /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ZlibResult Compress(string sourcePath, Span<byte> dest)
-        => this.Compress(File.ReadAllBytes(sourcePath), dest);
+    public void Compress(string sourcePath, Span<byte> dest, out uint bytesWritten, out uint hash, out OperationStatus status)
+        => this.Compress(File.ReadAllBytes(sourcePath), dest, out bytesWritten, out hash, out status);
 
     /// <summary>
     /// Compresses data using the user specified compression level.
     /// </summary>
     /// <param name="source">The input data buffer.</param>
     /// <param name="dest">The compressed data buffer.</param>
+    /// <param name="bytesWritten">The amount of bytes written to the destination buffer.</param>
+    /// <param name="hash">The Adler32 checksum of the compressed/decompressed data if
+    /// it was compressed/decompressed with <see cref="ZlibWindowBits.Deflate" />
+    /// or <see cref="ZlibWindowBits.Zlib" />, the Crc32 checksum otherwise.</param>
+    /// <param name="status">The resulting status code from zlib.</param>
     /// <exception cref="NotPackableException">
     /// Thrown when zlib errors internally in any way.
     /// </exception>
-    /// <returns>
-    /// The zlib result structure that contains the amount of bytes read, written,
-    /// and the adler32 hash of the data that can be used to compare the integrity
-    /// of the compressed/decompressed results.
-    /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ZlibResult Compress(ReadOnlySpan<byte> source, Span<byte> dest)
-    {
-        var bytesWritten = ZlibHelper.Compress(source, dest, this.Options.CompressionLevel, this.Options.WindowBits, this.Options.Strategy, out var hash, out var status);
-        return new(bytesWritten, 0, hash, status);
-    }
-
-    /// <summary>
-    /// Computes an Adler32 Hash if the Window Bits in <see cref="Options" /> is
-    /// <see cref="ZlibWindowBits.Deflate" /> or <see cref="ZlibWindowBits.Zlib" />,
-    /// a Crc32 Hash otherwise.
-    /// </summary>
-    /// <param name="source">The input data to hash.</param>
-    /// <returns>The computed Adler32 or Crc32 Hash.</returns>
-    public uint ComputeHash(ReadOnlySpan<byte> source)
-        => !this.Options.WindowBits.Equals(ZlibWindowBits.GZip)
-            ? (uint)(ZlibHelper.GetAdler32(source) & 0xFFFFFFFF)
-            : (uint)(ZlibHelper.GetCrc32(source) & 0xFFFFFFFF);
+    public void Compress(ReadOnlySpan<byte> source, Span<byte> dest, out uint bytesWritten, out uint hash, out OperationStatus status)
+        => this.CompressCore(source, dest, out bytesWritten, out hash, out status);
 
     [ExcludeFromCodeCoverage]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool TryCompressCore(ReadOnlySpan<byte> source, Span<byte> dest, out ZlibResult result)
+    private void CompressCore(ReadOnlySpan<byte> source, Span<byte> dest, out uint bytesWritten, out uint hash, out OperationStatus status)
+    {
+        bytesWritten = ZlibHelper.Compress(source, dest, this.Options.CompressionLevel, this.Options.WindowBits, this.Options.Strategy, out var zstatus);
+        hash = this.Options.HashAlgorithm.ComputeHash(source);
+        status = zstatus.ToOperationStatus();
+    }
+
+    [ExcludeFromCodeCoverage]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool TryCompressCore(ReadOnlySpan<byte> source, Span<byte> dest, out uint bytesWritten, out uint hash, out OperationStatus status)
     {
         try
         {
-            result = this.Compress(source, dest);
+            this.CompressCore(source, dest, out bytesWritten, out hash, out status);
             return true;
         }
         catch (NotPackableException)
         {
-            result = default;
+            bytesWritten = default;
+            hash = default;
+            status = default;
             return false;
         }
     }

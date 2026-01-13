@@ -1,4 +1,9 @@
-﻿namespace ZlibSharp.Extensions;
+﻿// Copyright (c) 2021~2022, Els_kom org.
+// https://github.com/Elskom/
+// All rights reserved.
+// license: MIT, see LICENSE for more details.
+
+namespace ZlibSharp.Extensions;
 
 using ZlibSharp.Exceptions;
 
@@ -19,8 +24,8 @@ public static class ZlibDecoderExtensions
     public static uint GetDecompressedSize(this ZlibDecoder decoder, ReadOnlySpan<byte> source)
     {
         var discard = new byte[Array.MaxLength];
-        _ = decoder.TryDecompress(source, discard, out var result);
-        return result.BytesWritten;
+        _ = decoder.TryDecompress(source, discard, out var bytesWritten, out _, out _, out _);
+        return bytesWritten;
     }
 
     /// <summary>
