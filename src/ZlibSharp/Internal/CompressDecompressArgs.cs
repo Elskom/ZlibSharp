@@ -1,15 +1,18 @@
-﻿// Copyright (c) 2021~2022, Els_kom org.
+﻿// Copyright (c) 2021~2026, Els_kom org.
 // https://github.com/Elskom/
 // All rights reserved.
 // license: MIT, see LICENSE for more details.
 
 namespace ZlibSharp.Internal;
 
+[StructLayout(LayoutKind.Sequential)]
 internal unsafe struct CompressDecompressArgs
 {
     // shared args
     internal byte* source;
     internal byte* dest;
+    internal uint source_length;
+    internal uint dest_length;
     internal ZlibWindowBits windowBits;
     internal ZlibStatus status;
 
@@ -18,5 +21,5 @@ internal unsafe struct CompressDecompressArgs
     internal ZlibCompressionStrategy strategy;
 
     // decompress specific args
-    internal uint bytesWritten;
+    internal CULong bytesWritten;
 }

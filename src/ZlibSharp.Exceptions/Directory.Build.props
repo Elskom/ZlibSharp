@@ -1,0 +1,17 @@
+<Project>
+
+  <Import Project="../../Directory.Build.props" />
+
+  <PropertyGroup>
+    <Version>1.0.0.0</Version>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageReleaseNotes>
+      - Added NotPackableException and NotUnpackableException.
+    </PackageReleaseNotes>
+    <Description>
+      A .NET library that provides exceptions for when data is not compressable/decompressable.
+    </Description>
+  </PropertyGroup>
+
+</Project>

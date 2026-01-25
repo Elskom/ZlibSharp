@@ -1,4 +1,4 @@
-// Copyright (c) 2021~2022, Els_kom org.
+// Copyright (c) 2021~2026, Els_kom org.
 // https://github.com/Elskom/
 // All rights reserved.
 // license: MIT, see LICENSE for more details.
@@ -8,7 +8,7 @@ namespace ZlibSharp;
 /// <summary>
 /// Zlib's supported compression levels.
 /// </summary>
-public enum ZlibCompressionLevel
+public enum ZlibCompressionLevel : int
 {
     /// <summary>
     /// The default compression level.

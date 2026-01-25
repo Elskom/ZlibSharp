@@ -1,12 +1,9 @@
-﻿// Copyright (c) 2021~2022, Els_kom org.
+﻿// Copyright (c) 2021~2026, Els_kom org.
 // https://github.com/Elskom/
 // All rights reserved.
 // license: MIT, see LICENSE for more details.
 
 namespace ZlibSharp;
-
-using ZlibSharp.Interfaces;
-using ZlibSharp.Internal;
 
 /// <summary>
 /// Represents configuration options for zlib compression and decompression operations.
@@ -17,9 +14,6 @@ using ZlibSharp.Internal;
 /// during decompression.</remarks>
 public class ZlibOptions
 {
-    private readonly ICompressionHash adler32hash = new Adler32Hash();
-    private readonly ICompressionHash crc32hash = new Crc32Hash();
-
     /// <summary>
     /// Initializes a new instance of the <see cref="ZlibOptions"/> class with default settings for compression/decompression.
     /// </summary>
@@ -39,16 +33,7 @@ public class ZlibOptions
     ///
     /// This also affects the hash algorithm used for integrity checks as well.
     /// </summary>
-    public ZlibWindowBits WindowBits {
-        get;
-        set
-        {
-            this.HashAlgorithm = !value.Equals(ZlibWindowBits.GZip)
-                ? this.adler32hash
-                : this.crc32hash;
-            field = value;
-        }
-    }
+    public ZlibWindowBits WindowBits { get; set; }
 
     /// <summary>
     /// Gets or sets the compression strategy to use to compress the data.
@@ -57,11 +42,6 @@ public class ZlibOptions
     /// Note: This value is ignored when decompressing data.
     /// </remarks>
     public ZlibCompressionStrategy Strategy { get; set; }
-
-    /// <summary>
-    /// Gets or sets the hash algorithm to use.
-    /// </summary>
-    public ICompressionHash HashAlgorithm { get; set; } = null!;
 
     /// <summary>
     /// Resets the options to their default values.

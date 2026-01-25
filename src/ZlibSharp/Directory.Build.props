@@ -3,7 +3,7 @@
   <Import Project="../../Directory.Build.props" />
 
   <PropertyGroup>
-    <Version>1.2.13.6</Version>
+    <Version>1.3.1.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageReleaseNotes>
@@ -12,10 +12,10 @@
         - ZlibEncoder and ZlibDecoder extension classes.
       - Made ZlibEncoder and ZlibDecoder constructors internal.
       - Made ZlibEncoder and ZlibDecoder into classes.
-      - The ZlibEncoder and ZlibDecoder classes now contain a ComputeHash method.
       - The properties of ZlibEncoder and ZlibDecoder are now simplified to provide an Options property that contains all the options for the encoder/decoder.
       - A new ZlibOptions class which contains all the options for the encoder/decoder.
       - The ZlibResult class has been removed and replaced with output parameters in the ZlibEncoder and ZlibDecoder classes.
+      - The hash output parameters have been removed.
     </PackageReleaseNotes>
     <Description>
       A high performance .NET zlib wrapper that is span based and offers more functionality over System.IO.Compression by allowing more developer control over how the data is compressed and by avoiding .NET's streams entirely.

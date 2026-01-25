@@ -1,11 +1,13 @@
 <Project>
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework Condition="'$(MSBuildProjectName)' != 'ZlibSharp.IO.Hashing'">net10.0</TargetFramework>
+    <TargetFrameworks Condition="'$(MSBuildProjectName)' == 'ZlibSharp.IO.Hashing'">netstandard2.0;net8.0;net9.0;net10.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <DebugType>embedded</DebugType>
     <SignAssembly>True</SignAssembly>
+    <LangVersion>latest</LangVersion>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)Elskom.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2021~2022, Els_kom org.
+﻿// Copyright (c) 2021~2026, Els_kom org.
 // https://github.com/Elskom/
 // All rights reserved.
 // license: MIT, see LICENSE for more details.
@@ -8,7 +8,7 @@ namespace ZlibSharp;
 /// <summary>
 /// Zlib compression strategies.
 /// </summary>
-public enum ZlibCompressionStrategy
+public enum ZlibCompressionStrategy : int
 {
     /// <summary>
     /// Default strategy.

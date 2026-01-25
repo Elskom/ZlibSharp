@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2021~2022, Els_kom org.
+﻿// Copyright (c) 2021~2026, Els_kom org.
 // https://github.com/Elskom/
 // All rights reserved.
 // license: MIT, see LICENSE for more details.
@@ -8,26 +8,9 @@ namespace ZlibSharp.Internal;
 [ExcludeFromCodeCoverage]
 internal static unsafe class ZlibHelper
 {
-    private static bool zlibResolverAdded;
-
-    // internal static string ZlibLibFileName
-    //     => (OperatingSystem.IsWindows(), OperatingSystem.IsLinux() || OperatingSystem.IsFreeBSD() || OperatingSystem.IsAndroid(), OperatingSystem.IsMacOS() || OperatingSystem.IsMacCatalyst(), OperatingSystem.IsIOS() && !OperatingSystem.IsMacCatalyst()) switch
-    //     {
-    //         (true, false, false, false) => "ZlibSharp.Native.dll",
-    //         (false, true, false, false) => "libZlibSharp.Native.so",
-    //         (false, false, true, false) => "libZlibSharp.Native.dylib",
-    //         (false, false, false, true) => "__Internal",
-    //         _ => throw new PlatformNotSupportedException("Zlib is probably not supported on this platform."),
-    //     };
-#if !TARGET_IOS
-    internal const string ZlibLibFileName = "ZlibSharp.Native";
-#else
-    internal const string ZlibLibFileName = "__Internal";
-#endif
-
-    internal static uint Compress(ReadOnlySpan<byte> source, Span<byte> dest, ZlibCompressionLevel compressionLevel, ZlibWindowBits windowBits, ZlibCompressionStrategy strategy, out ZlibStatus status)
+    internal static ulong Compress(ReadOnlySpan<byte> source, Span<byte> dest, ZlibCompressionLevel compressionLevel, ZlibWindowBits windowBits, ZlibCompressionStrategy strategy, out ZlibStatus status)
     {
-        // PreOperationCheck();
+        UnsafeNativeMethods.AddNativeResolver();
         CompressDecompressArgs args = default;
         var argsPtr = &args;
 
@@ -42,13 +25,15 @@ internal static unsafe class ZlibHelper
         fixed (byte* destPtr = dest)
         {
             argsPtr->source = sourcePtr;
+            argsPtr->source_length = (uint)source.Length;
             argsPtr->dest = destPtr;
+            argsPtr->dest_length = (uint)dest.Length;
             argsPtr->compressionLevel = compressionLevel;
             argsPtr->windowBits = windowBits;
             argsPtr->strategy = strategy;
-            var result = UnsafeNativeMethods.Compress(argsPtr);
+            _ = UnsafeNativeMethods.Compress(argsPtr);
             status = argsPtr->status;
-            return result;
+            return argsPtr->bytesWritten.Value.ToUInt64();
 
             // streamPtr->next_in = sourcePtr;
             // streamPtr->avail_in = (uint)source.Length;
@@ -70,9 +55,9 @@ internal static unsafe class ZlibHelper
 
     //Decompress returns avail_in, allowing users to reallocate and continue decompressing remaining data
     //should Dest buffer be under-allocated
-    internal static uint Decompress(ReadOnlySpan<byte> source, Span<byte> dest, out uint bytesWritten, out ZlibStatus status, ZlibWindowBits windowBits)
+    internal static uint Decompress(ReadOnlySpan<byte> source, Span<byte> dest, out ulong bytesWritten, out ZlibStatus status, ZlibWindowBits windowBits)
     {
-        // PreOperationCheck();
+        UnsafeNativeMethods.AddNativeResolver();
         CompressDecompressArgs args = default;
         var argsPtr = &args;
 
@@ -87,10 +72,12 @@ internal static unsafe class ZlibHelper
         fixed (byte* destPtr = dest)
         {
             argsPtr->source = sourcePtr;
+            argsPtr->source_length = (uint)source.Length;
             argsPtr->dest = destPtr;
+            argsPtr->dest_length = (uint)dest.Length;
             argsPtr->windowBits = windowBits;
             var result = UnsafeNativeMethods.Decompress(argsPtr);
-            bytesWritten = argsPtr->bytesWritten;
+            bytesWritten = argsPtr->bytesWritten.Value.ToUInt64();
             status = argsPtr->status;
             return result;
 
@@ -137,18 +124,18 @@ internal static unsafe class ZlibHelper
     //     }
     // }
 
-    private static void PreOperationCheck()
-    {
-        if (!zlibResolverAdded)
-        {
-            AddNativeResolver();
-        }
-
-        // if (!ZlibVersion().Equals(NativeZlibVersion))
-        // {
-        //     UnsafeNativeMethods.ThrowInvalidOperationException();
-        // }
-    }
+    // private static void PreOperationCheck()
+    // {
+    //     if (!zlibResolverAdded)
+    //     {
+    //         AddNativeResolver();
+    //     }
+    // 
+    //     if (!ZlibVersion().Equals(NativeZlibVersion))
+    //     {
+    //         UnsafeNativeMethods.ThrowInvalidOperationException();
+    //     }
+    // }
 
     // private static string ZlibVersion()
     //     => Marshal.PtrToStringUTF8((nint)UnsafeNativeMethods.zlibVersion()) ?? string.Empty;
@@ -201,18 +188,29 @@ internal static unsafe class ZlibHelper
     //         : result;
     // }
 
-    private static void AddNativeResolver()
-    {
-        NativeLibrary.SetDllImportResolver(typeof(ZlibHelper).Assembly,
-            (name, assembly, path) =>
-            {
-                var handle = IntPtr.Zero;
-
-                // check if name is zlib otherwise, fallback to default import resolver.
-                if (name == "zlib")
-                {
-                    // Try to load the custom native library first.
-                    _ = NativeLibrary.TryLoad(ZlibLibFileName, assembly, path, out handle);
+    // private static void AddNativeResolver()
+    // {
+    //     if (cookie == nint.Zero)
+    //     {
+    //         var libraryDirectory = $"{Environment.CurrentDirectory}{Path.DirectorySeparatorChar}runtimes{Path.DirectorySeparatorChar}{RuntimeInformation.RuntimeIdentifier}{Path.DirectorySeparatorChar}native{Path.DirectorySeparatorChar}";
+    //         cookie = UnsafeNativeMethods.AddDllDirectory(libraryDirectory);
+    //         Console.WriteLine(libraryDirectory);
+    //     }
+    // 
+    //     NativeLibrary.SetDllImportResolver(typeof(UnsafeNativeMethods).Assembly,
+    //         (name, assembly, path) =>
+    //         {
+    //             var handle = nint.Zero;
+    // 
+    //             // check if name is zlib otherwise, fallback to default import resolver.
+    //             if (name == "zlib")
+    //             {
+    //                 // Try to load the custom native library first.
+    //                 Debug.WriteLine($"Attempting to load native library with search path: {path}...");
+    //                 if (!NativeLibrary.TryLoad(ZlibLibFileName, assembly, path, out handle))
+    //                 {
+    //                     throw new DllNotFoundException($"Unable to load DLL '{ZlibLibFileName}' or one of its dependencies: The specified module could not be found. (0x8007007E)");
+    //                 }
                     /*
                     if (OperatingSystem.IsWindows())
                     {
@@ -261,10 +259,10 @@ internal static unsafe class ZlibHelper
                         throw new PlatformNotSupportedException("Zlib is probably not supported on this platform.");
                     }
                     */
-                }
-
-                return handle;
-            });
-        zlibResolverAdded = true;
-    }
+    //             }
+    // 
+    //             return handle;
+    //         });
+    //     zlibResolverAdded = true;
+    // }
 }

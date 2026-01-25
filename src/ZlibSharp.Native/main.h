@@ -26,20 +26,22 @@
 #endif
 #endif
 
+#include <zlib.h>
+
 typedef struct _compress_decompress_args {
   // shared args
-  unsigned char *source;
-  unsigned char *dest;
-  unsigned int windowBits;
-  unsigned int status;
+  Byte *source;
+  Byte *dest;
+  uInt source_length;
+  uInt dest_length;
+  int windowBits;
+  int status;
   // compress specific args
-  unsigned int compressionLevel;
-  unsigned int strategy;
+  int compressionLevel;
+  int strategy;
   // decompress specific args
-  unsigned int bytesWritten;
+  uLong bytesWritten;
 } compress_decompress_args, *pcompress_decompress_args;
 
-ZLIBSHARP_NATIVE_EXTERN unsigned int Compress(pcompress_decompress_args args);
-ZLIBSHARP_NATIVE_EXTERN unsigned int Decompress(pcompress_decompress_args args);
-ZLIBSHARP_NATIVE_EXTERN unsigned long Crc32_ComputeHash(const unsigned char *source);
-ZLIBSHARP_NATIVE_EXTERN unsigned long Adler32_ComputeHash(const unsigned char *source);
+ZLIBSHARP_NATIVE_EXTERN int Compress(pcompress_decompress_args args);
+ZLIBSHARP_NATIVE_EXTERN uInt Decompress(pcompress_decompress_args args);

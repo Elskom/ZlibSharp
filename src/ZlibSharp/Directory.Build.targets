@@ -1,12 +1,15 @@
 <Project>
 
   <ItemGroup>
+    <Using Include="System.Buffers" />
     <Using Include="System.Diagnostics.CodeAnalysis" />
+    <Using Include="System.Runtime.CompilerServices" />
     <Using Include="System.Runtime.InteropServices" />
     <Using Include="System.Runtime.Serialization" />
-    <Using Include="System.Runtime.CompilerServices" />
+    <Using Include="System.Runtime.Versioning" />
     <Using Include="System.Text" />
-    <None Include="bin\$(Configuration)\$(TargetFramework)\runtimes\**\*.*" Pack="true" CopyToOutputDirectory="PreserveNewest" />
+    <Using Include="ZlibSharp.Internal" />
+    <None Include="runtimes\**\*.*" Pack="true" CopyToOutputDirectory="PreserveNewest" PackagePath="runtimes\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>

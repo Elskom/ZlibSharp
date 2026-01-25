@@ -1,0 +1,9 @@
+<Project>
+
+  <ItemGroup>
+    <Using Include="System.Diagnostics.CodeAnalysis" />
+    <Using Include="System.Runtime.Serialization" />
+    <None Include="runtimes\**\*.*" Pack="true" CopyToOutputDirectory="PreserveNewest" PackagePath="runtimes\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>
