@@ -1,6 +1,8 @@
 <Project>
 
-  <ItemGroup Label="ProjectConfigurations">
+  <Import Project="../../Directory.Build.props" Condition="'$(MSBuildProjectExtension)' == '.csproj'" />
+
+  <ItemGroup Label="ProjectConfigurations" Condition="'$(MSBuildProjectExtension)' != '.csproj'">
     <ProjectConfiguration Include="Debug|ARM64">
       <Configuration>Debug</Configuration>
       <Platform>ARM64</Platform>
@@ -27,7 +29,7 @@
     </ProjectConfiguration>
   </ItemGroup>
 
-  <PropertyGroup Label="Configuration">
+  <PropertyGroup Label="Configuration" Condition="'$(MSBuildProjectExtension)' != '.csproj'">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <UseDebugLibraries Condition="'$(Configuration)' == 'Debug'">true</UseDebugLibraries>
@@ -35,18 +37,17 @@
     <WholeProgramOptimization Condition="'$(Configuration)' == 'Release'">true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <IntDir>obj\$(Configuration)\$(Platform)\</IntDir>
-    <OutDir Condition="'$(Platform)' == 'Win32'">..\ZlibSharp\runtimes\win-x86\native\</OutDir>
-    <OutDir Condition="'$(Platform)' == 'x64'">..\ZlibSharp\runtimes\win-x64\native\</OutDir>
-    <OutDir Condition="'$(Platform)' == 'ARM64'">..\ZlibSharp\runtimes\win-arm64\native\</OutDir>
+    <OutDir Condition="'$(Platform)' == 'Win32'">runtimes\win-x86\native\</OutDir>
+    <OutDir Condition="'$(Platform)' == 'x64'">runtimes\win-x64\native\</OutDir>
+    <OutDir Condition="'$(Platform)' == 'ARM64'">runtimes\win-arm64\native\</OutDir>
   </PropertyGroup>
 
-  <ImportGroup Label="PropertySheets">
+  <ImportGroup Label="PropertySheets" Condition="'$(MSBuildProjectExtension)' != '.csproj'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
 
-  <ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(MSBuildProjectExtension)' != '.csproj'">
     <ClCompile>
-      <LanguageStandard_C>stdclatest</LanguageStandard_C>
       <WarningLevel>Level3</WarningLevel>
       <FunctionLevelLinking Condition="'$(Configuration)' == 'Release'">true</FunctionLevelLinking>
       <IntrinsicFunctions Condition="'$(Configuration)' == 'Release'">true</IntrinsicFunctions>
@@ -64,11 +65,11 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <GenerateDebugInformation Condition="'$(Configuration)' == 'Release'">false</GenerateDebugInformation>
+      <!-- <GenerateDebugInformation Condition="'$(Configuration)' == 'Release'">false</GenerateDebugInformation> -->
       <EnableUAC>false</EnableUAC>
       <ImportLibrary>$(IntDir)$(TargetName).lib</ImportLibrary>
       <ProfileGuidedDatabase>$(IntDir)$(TargetName).pgd</ProfileGuidedDatabase>
-      <ProgramDatabaseFile>$(IntDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>
     </Link>
   </ItemDefinitionGroup>
 

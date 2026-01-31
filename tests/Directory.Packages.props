@@ -21,6 +21,7 @@
     </PackageReference>
     <PackageReference Include="FluentAssertions" Version="*-*" />
     <ProjectReference Include="../src/ZlibSharp/ZlibSharp.csproj" />
+    <ProjectReference Include="../src/ZlibSharp.IO.Hashing/ZlibSharp.IO.Hashing.csproj" />
   </ItemGroup>
 
 </Project>

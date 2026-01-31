@@ -18,8 +18,9 @@
  * we may still need to support gcc >= 4, as some Ubuntu LTS and Centos versions
  * have 4 < gcc < 5.
  */
-#if (defined(__GNUC__) && (__GNUC__ >= 4)) ||\
-        (defined(__clang__) && ZLIBSHARP__has_attribute(visibility))
+#if ((defined(__GNUC__) && (__GNUC__ >= 4)) ||\
+        (defined(__clang__) && ZLIBSHARP__has_attribute(visibility))) &&\
+        defined(ZLIBSHARPNATIVE_EXPORTS)
 #define ZLIBSHARP_NATIVE_EXTERN __attribute__ ((visibility ("default")))
 #else
 #define ZLIBSHARP_NATIVE_EXTERN

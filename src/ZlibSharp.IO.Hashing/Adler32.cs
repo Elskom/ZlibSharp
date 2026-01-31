@@ -2,13 +2,25 @@
 
 namespace ZlibSharp.IO.Hashing;
 
+using System.Diagnostics.CodeAnalysis;
+
 /// <summary>
-/// Provides an implementation of the Adler-32 non-cryptographic hash algorithm for computing checksums over binary
-/// data.
+///   Provides an implementation of the Adler-32 algorithm, as used in
+///   RFC1950.
 /// </summary>
-/// <remarks>The Adler-32 algorithm is designed for fast, lightweight integrity checking and is commonly used in
-/// data compression and transmission scenarios. This class is not suitable for cryptographic purposes. Instances of
-/// this class are not thread-safe; concurrent access should be synchronized externally if required.</remarks>
+/// <remarks>
+///   <para>
+///     The Adler-32 algorithm is designed for fast, lightweight integrity checking and is commonly used in
+///     data compression and transmission scenarios. This class is not suitable for cryptographic purposes.
+///   </para>
+///   <para>
+///     Adler-32 is not as robust as other checksum algorithms like CRC32, but it is faster to compute.
+///     It also originally comes from zlib.
+///   </para>
+///   <para>
+///     The Adler-32 checksum is stored as s2*65536 + s1 in most-significant-byte first(network) order.
+///   </para>
+/// </remarks>
 public sealed partial class Adler32 : NonCryptographicHashAlgorithm
 {
     private const uint InitialState = 1u;
@@ -18,6 +30,7 @@ public sealed partial class Adler32 : NonCryptographicHashAlgorithm
     /// <summary>
     /// Initializes a new instance of the <see cref="Adler32"/> class.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public Adler32()
         : base(Size)
     {
@@ -26,12 +39,14 @@ public sealed partial class Adler32 : NonCryptographicHashAlgorithm
     /// <summary>
     /// Initializes a new instance of the <see cref="Adler32"/> class using the state from another instance.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     private Adler32(uint adler)
         : base(Size)
         => _adler = adler;
 
     /// <summary>Returns a clone of the current instance, with a copy of the current instance's internal state.</summary>
     /// <returns>A new instance that will produce the same sequence of values as the current instance.</returns>
+    [ExcludeFromCodeCoverage]
     public Adler32 Clone()
         => new(_adler);
 
@@ -40,12 +55,14 @@ public sealed partial class Adler32 : NonCryptographicHashAlgorithm
     /// processed for the current hash computation.
     /// </summary>
     /// <param name="source">The data to process.</param>
+    [ExcludeFromCodeCoverage]
     public override void Append(ReadOnlySpan<byte> source)
         => _adler = Update(_adler, source);
 
     /// <summary>
     /// Resets the hash computation to the initial state.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public override void Reset()
         => _adler = InitialState;
 
@@ -54,17 +71,18 @@ public sealed partial class Adler32 : NonCryptographicHashAlgorithm
     /// without modifying accumulated state.
     /// </summary>
     /// <param name="destination">The buffer that receives the computed hash value.</param>
+    [ExcludeFromCodeCoverage]
     protected override void GetCurrentHashCore(Span<byte> destination)
-        // The finalization step of the CRC is to perform the ones' complement.
-        => BinaryPrimitives.WriteUInt32LittleEndian(destination, _adler);
+        => BinaryPrimitives.WriteUInt32BigEndian(destination, _adler);
 
     /// <summary>
     /// Writes the computed hash value to <paramref name="destination"/>
     /// then clears the accumulated state.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     protected override void GetHashAndResetCore(Span<byte> destination)
     {
-        BinaryPrimitives.WriteUInt32LittleEndian(destination, _adler);
+        BinaryPrimitives.WriteUInt32BigEndian(destination, _adler);
         _adler = InitialState;
     }
 
@@ -74,6 +92,7 @@ public sealed partial class Adler32 : NonCryptographicHashAlgorithm
     /// <returns>
     /// The hash value for the data already provided.
     /// </returns>
+    [ExcludeFromCodeCoverage]
     [CLSCompliant(false)]
     public uint GetCurrentHashAsUInt32()
         => _adler;
@@ -86,6 +105,7 @@ public sealed partial class Adler32 : NonCryptographicHashAlgorithm
     /// <exception cref="ArgumentNullException">
     /// <paramref name="source"/> is <see langword="null"/>.
     /// </exception>
+    [ExcludeFromCodeCoverage]
     public static byte[] Hash(byte[] source)
     {
 #if NETSTANDARD2_0
@@ -104,11 +124,12 @@ public sealed partial class Adler32 : NonCryptographicHashAlgorithm
     /// </summary>
     /// <param name="source">The data to hash.</param>
     /// <returns>The Adler-32 hash of the provided data.</returns>
+    [ExcludeFromCodeCoverage]
     public static byte[] Hash(ReadOnlySpan<byte> source)
     {
         var ret = new byte[Size];
         var hash = HashToUInt32(source);
-        BinaryPrimitives.WriteUInt32LittleEndian(ret, hash);
+        BinaryPrimitives.WriteUInt32BigEndian(ret, hash);
         return ret;
     }
 
@@ -124,6 +145,7 @@ public sealed partial class Adler32 : NonCryptographicHashAlgorithm
     /// <see langword="true"/> if <paramref name="destination"/> is long enough to receive
     /// the computed hash value (4 bytes); otherwise, <see langword="false"/>.
     /// </returns>
+    [ExcludeFromCodeCoverage]
     public static bool TryHash(ReadOnlySpan<byte> source, Span<byte> destination, out int bytesWritten)
     {
         if (destination.Length < Size)
@@ -133,7 +155,7 @@ public sealed partial class Adler32 : NonCryptographicHashAlgorithm
         }
 
         var hash = HashToUInt32(source);
-        BinaryPrimitives.WriteUInt32LittleEndian(destination, hash);
+        BinaryPrimitives.WriteUInt32BigEndian(destination, hash);
         bytesWritten = Size;
         return true;
     }
@@ -146,6 +168,7 @@ public sealed partial class Adler32 : NonCryptographicHashAlgorithm
     /// <returns>
     /// The number of bytes written to <paramref name="destination"/>.
     /// </returns>
+    [ExcludeFromCodeCoverage]
     public static int Hash(ReadOnlySpan<byte> source, Span<byte> destination)
     {
         if (destination.Length < Size)
@@ -156,7 +179,7 @@ public sealed partial class Adler32 : NonCryptographicHashAlgorithm
         }
 
         var hash = HashToUInt32(source);
-        BinaryPrimitives.WriteUInt32LittleEndian(destination, hash);
+        BinaryPrimitives.WriteUInt32BigEndian(destination, hash);
         return Size;
     }
 
@@ -171,14 +194,14 @@ public sealed partial class Adler32 : NonCryptographicHashAlgorithm
     public static uint HashToUInt32(ReadOnlySpan<byte> source)
         => Update(InitialState, source);
 
-    private const uint Base = 65521; // largest prime smaller than 65536
-    private const int NMax = 5552;   // NMax is the largest n such that 255n(n+1)/2 + (n+1)(BASE-1) <= 2^32-1
-
+    [ExcludeFromCodeCoverage]
     private static uint Update(uint adler, ReadOnlySpan<byte> buf)
     {
+        const uint Base = 65521; // largest prime smaller than 65536
+        const int NMax = 5552; // NMax is the largest n such that 255n(n+1)/2 + (n+1)(BASE-1) <= 2^32-1
         if (buf.IsEmpty)
         {
-            return 1u;
+            return adler;
         }
 
         var s1 = adler & 0xFFFF;
@@ -186,9 +209,13 @@ public sealed partial class Adler32 : NonCryptographicHashAlgorithm
         while (buf.Length > 0)
         {
             var k = buf.Length < NMax ? buf.Length : NMax;
-            for (var i = 0; i < k; i++)
+#if NETSTANDARD2_0
+            foreach (var b in buf.Slice(0, k))
+#else
+            foreach (var b in buf[..k])
+#endif
             {
-                s1 += buf[i];
+                s1 += b;
                 s2 += s1;
             }
             s1 %= Base;

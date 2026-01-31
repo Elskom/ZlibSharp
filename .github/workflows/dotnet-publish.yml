@@ -9,7 +9,7 @@ on:
       - '*'
 
 jobs:
-  build:
+  build-native:
     strategy:
       fail-fast: false
       matrix:
@@ -19,14 +19,80 @@ jobs:
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
       DOTNET_CLI_TELEMETRY_OPTOUT: true
       DOTNET_NOLOGO: true
-      NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
     steps:
     - uses: actions/checkout@main
+
     - name: Install latest .NET SDK
       uses: Elskom/setup-latest-dotnet@main
       with:
-        SDK_VERSION: '9.0.100'
+        SDK_VERSION: '10.0.100'
         RUNTIME_VERSIONS: '8.0.x'
+
+    - name: Set up Visual Studio Dev shell
+      if: runner.OS == 'Windows'
+      uses: egor-tensin/vs-shell@master
+      with:
+        arch: x64
+
+    - name: build native library (win-x86, win-x64, win-arm, win-arm64)
+      if: runner.OS == 'Windows'
+      run: |
+        cd src/ZlibSharp.Native
+        ./build.ps1
+        cd ../..
+      shell: pwsh
+
+    - name: build native library (linux-x86, linux-x64, linux-arm, linux-arm64)
+      if: runner.OS == 'Linux'
+      run: |
+        cd src/ZlibSharp.Native
+        chmod +x ./build.ps1
+        sudo ./build.ps1
+        cd ../..
+      shell: pwsh
+
+    - name: build native library (osx-x64, osx-arm64)
+      if: runner.OS == 'MacOS'
+      run: |
+        cd src/ZlibSharp.Native
+        ./build.ps1
+        cd ../..
+      shell: pwsh
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@main
+      with:
+        name: artifacts-${{ runner.os }}
+        path: artifacts/*
+
+  build:
+    needs: build-native
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+      DOTNET_NOLOGO: true
+    steps:
+    - uses: actions/checkout@main
+
+    - name: Install latest .NET SDK
+      uses: Elskom/setup-latest-dotnet@main
+      with:
+        SDK_VERSION: '10.0.100'
+        RUNTIME_VERSIONS: '8.0.x'
+
+    - name: Download artifacts
+      uses: actions/download-artifact@main
+      with:
+        pattern: artifacts-*
+        path: artifacts/
+        merge-multiple: true
+
+    - uses: geekyeggo/delete-artifact@main
+      with:
+          name: artifacts-*
 
     - name: Restore, Build, Test, Pack, and Push.
       uses: Elskom/build-dotnet@main

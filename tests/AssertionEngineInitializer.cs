@@ -10,6 +10,7 @@
 
 namespace ZlibSharp.Tests;
 
+[ExcludeFromCodeCoverage]
 public static class AssertionEngineInitializer
 {
     public static void AcknowledgeSoftWarning()

@@ -1,14 +1,26 @@
 <Project>
 
   <PropertyGroup>
-    <TargetFramework Condition="'$(MSBuildProjectName)' != 'ZlibSharp.IO.Hashing'">net10.0</TargetFramework>
-    <TargetFrameworks Condition="'$(MSBuildProjectName)' == 'ZlibSharp.IO.Hashing'">netstandard2.0;net8.0;net9.0;net10.0</TargetFrameworks>
+    <TargetFramework Condition="'$(MSBuildProjectName)' != 'ZlibSharp.IO.Hashing' AND '$(MSBuildProjectName)' != 'ZlibSharp'">net10.0</TargetFramework>
+    <TargetFrameworks Condition="'$(MSBuildProjectName)' == 'ZlibSharp.IO.Hashing' OR '$(MSBuildProjectName)' == 'ZlibSharp'">netstandard2.0;net8.0;net9.0;net10.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <DebugType>embedded</DebugType>
     <SignAssembly>True</SignAssembly>
     <LangVersion>latest</LangVersion>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)Elskom.snk</AssemblyOriginatorKeyFile>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)artifacts</PackageOutputPath>
+    <RestoreAdditionalProjectSources>$(PackageOutputPath)</RestoreAdditionalProjectSources>
+    <!--
+        First we must set this to RestoreSources so the existing values are not lost.
+
+        Second, why the fuck is nuget.org not a part of this property by default???
+    -->
+    <RestoreSources>
+        $(RestoreSources);
+        https://api.nuget.org/v3/index.json;
+        $(RestoreAdditionalProjectSources)
+    </RestoreSources>
   </PropertyGroup>
 
 </Project>

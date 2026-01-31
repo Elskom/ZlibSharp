@@ -21,5 +21,5 @@ internal unsafe struct CompressDecompressArgs
     internal ZlibCompressionStrategy strategy;
 
     // decompress specific args
-    internal CULong bytesWritten;
+    internal UIntPtr bytesWritten;
 }

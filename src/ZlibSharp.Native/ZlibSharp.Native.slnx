@@ -1,0 +1,8 @@
+<Solution>
+  <Configurations>
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+    <Platform Name="Win32" />
+  </Configurations>
+  <Project Path="ZlibSharp.Native.vcxproj" Id="eef9480e-a73e-45a0-bb86-77c738680c00" />
+</Solution>

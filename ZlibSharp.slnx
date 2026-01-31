@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ZlibSharp.IO.Hashing/ZlibSharp.IO.Hashing.csproj" />
+    <Project Path="src/ZlibSharp/ZlibSharp.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ZlibSharp.Tests.csproj" />
+  </Folder>
+</Solution>

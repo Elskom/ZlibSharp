@@ -455,3 +455,11 @@ $RECYCLE.BIN/
 
 # Native runtimes build outputs folder.
 runtimes/
+
+# zlib clone for building ZlibSharp.Native.
+zlib/
+
+# Exclude archive files.
+*.rar
+*.zip
+*.7z

@@ -14,9 +14,6 @@ namespace ZlibSharp;
 /// during decompression.</remarks>
 public class ZlibOptions
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ZlibOptions"/> class with default settings for compression/decompression.
-    /// </summary>
     internal ZlibOptions()
         => this.Reset();
 

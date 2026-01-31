@@ -5,8 +5,6 @@
 
 namespace ZlibSharp.Internal;
 
-using System.Buffers;
-
 [ExcludeFromCodeCoverage]
 internal static class ZlibStatusExtensions
 {

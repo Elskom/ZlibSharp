@@ -6,7 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ZlibSharp.IO.Hashing\ZlibSharp.IO.Hashing.csproj" />
+    <PackageReference Condition="'$(TargetFramework)' == 'netstandard2.0'" Include="System.Runtime.Loader" Version="*" />
+    <PackageReference Condition="'$(TargetFramework)' == 'netstandard2.0'" Include="System.Memory" Version="*" />
+    <!-- Need to reference the native library packages so users of ZlibSharp would automatically get them inside of their build output folders. -->
+    <PackageReference Include="ZlibSharp.Native.win" Version="*" />
+    <PackageReference Include="ZlibSharp.Native.linux" Version="*" />
+    <PackageReference Include="ZlibSharp.Native.osx" Version="*" />
   </ItemGroup>
 
 </Project>

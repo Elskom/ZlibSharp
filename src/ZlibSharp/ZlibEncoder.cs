@@ -5,8 +5,6 @@
 
 namespace ZlibSharp;
 
-// using Internal;
-
 /// <summary>
 /// Zlib Memory Compression class.
 /// </summary>

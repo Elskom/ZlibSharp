@@ -5,8 +5,6 @@
 
 namespace ZlibSharp;
 
-// using Internal;
-
 /// <summary>
 /// Zlib Memory Decompression class.
 /// </summary>
@@ -35,7 +33,7 @@ public class ZlibDecoder
     /// <returns>The size of the data when it is decompressed.</returns>
     public ulong GetDecompressedSize(ReadOnlySpan<byte> source)
     {
-        var discard = new byte[Array.MaxLength];
+        var discard = new byte[OSHelpers.MaxArrayLength];
         _ = this.TryDecompress(source, discard, out var bytesWritten, out _, out _);
         return bytesWritten;
     }
