@@ -12,7 +12,6 @@ internal unsafe struct CompressDecompressArgs
     internal byte* source;
     internal byte* dest;
     internal uint source_length;
-    internal uint dest_length;
     internal ZlibWindowBits windowBits;
     internal ZlibStatus status;
 
@@ -22,4 +21,7 @@ internal unsafe struct CompressDecompressArgs
 
     // decompress specific args
     internal UIntPtr bytesWritten;
+
+    // internal bits the native code uses, DO NOT TOUCH THIS POINTER AT ALL.
+    internal nint reserved;
 }

@@ -19,9 +19,9 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="ReportGenerator" Version="*-*" />
     <PackageReference Include="FluentAssertions" Version="*-*" />
     <ProjectReference Include="../src/ZlibSharp/ZlibSharp.csproj" />
-    <ProjectReference Include="../src/ZlibSharp.IO.Hashing/ZlibSharp.IO.Hashing.csproj" />
   </ItemGroup>
 
 </Project>

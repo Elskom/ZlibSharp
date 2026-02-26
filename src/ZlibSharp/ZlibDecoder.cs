@@ -27,18 +27,6 @@ public class ZlibDecoder
     public ZlibOptions Options { get; internal set; }
 
     /// <summary>
-    /// Gets the size of the data when it is decompressed. Useful for when the data actually gets decompressed.
-    /// </summary>
-    /// <param name="source">The compressed input data.</param>
-    /// <returns>The size of the data when it is decompressed.</returns>
-    public ulong GetDecompressedSize(ReadOnlySpan<byte> source)
-    {
-        var discard = new byte[OSHelpers.MaxArrayLength];
-        _ = this.TryDecompress(source, discard, out var bytesWritten, out _, out _);
-        return bytesWritten;
-    }
-
-    /// <summary>
     /// Decompresses a file.
     /// </summary>
     /// <param name="sourcePath">The path to the file to decompress.</param>
@@ -51,8 +39,8 @@ public class ZlibDecoder
     /// <see langword="true"/> if the compression was a success, <see langword="false"/> otherwise.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryDecompress(string sourcePath, Span<byte> dest, out ulong bytesWritten, out uint bytesRead, out OperationStatus status)
-        => this.TryDecompress(File.ReadAllBytes(sourcePath), dest, out bytesWritten, out bytesRead, out status);
+    public bool TryDecompress(string sourcePath, out CompressionSpan<byte> dest, out ulong bytesWritten, out uint bytesRead, out OperationStatus status)
+        => this.TryDecompress(File.ReadAllBytes(sourcePath), out dest, out bytesWritten, out bytesRead, out status);
 
     /// <summary>
     /// Decompresses data.
@@ -67,8 +55,8 @@ public class ZlibDecoder
     /// <see langword="true"/> if the compression was a success, <see langword="false"/> otherwise.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryDecompress(ReadOnlySpan<byte> source, Span<byte> dest, out ulong bytesWritten, out uint bytesRead, out OperationStatus status)
-        => this.TryDecompressCore(source, dest, out bytesWritten, out bytesRead, out status);
+    public bool TryDecompress(ReadOnlySpan<byte> source, out CompressionSpan<byte> dest, out ulong bytesWritten, out uint bytesRead, out OperationStatus status)
+        => this.TryDecompressCore(source, out dest, out bytesWritten, out bytesRead, out status);
 
     /// <summary>
     /// Decompresses a file.
@@ -82,8 +70,8 @@ public class ZlibDecoder
     /// The resulting status code from zlib.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public OperationStatus Decompress(string sourcePath, Span<byte> dest, out ulong bytesWritten, out uint bytesRead)
-        => this.Decompress(File.ReadAllBytes(sourcePath), dest, out bytesWritten, out bytesRead);
+    public OperationStatus Decompress(string sourcePath, out CompressionSpan<byte> dest, out ulong bytesWritten, out uint bytesRead)
+        => this.Decompress(File.ReadAllBytes(sourcePath), out dest, out bytesWritten, out bytesRead);
 
     /// <summary>
     /// Decompresses data.
@@ -97,8 +85,8 @@ public class ZlibDecoder
     /// The resulting status code from zlib.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public OperationStatus Decompress(ReadOnlySpan<byte> source, Span<byte> dest, out ulong bytesWritten, out uint bytesRead)
-        => this.DecompressCore(source, dest, out bytesWritten, out bytesRead);
+    public OperationStatus Decompress(ReadOnlySpan<byte> source, out CompressionSpan<byte> dest, out ulong bytesWritten, out uint bytesRead)
+        => this.DecompressCore(source, out dest, out bytesWritten, out bytesRead);
 
     /// <summary>
     /// Check data for compression by gzip.
@@ -165,20 +153,18 @@ public class ZlibDecoder
     private static bool IsZlibHeader(byte byte1, byte byte2)
         => byte1 is 0x78 && byte2 is 0x01 or 0x5E or 0x9C or 0xDA;
 
-    [ExcludeFromCodeCoverage]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private OperationStatus DecompressCore(ReadOnlySpan<byte> source, Span<byte> dest, out ulong bytesWritten, out uint bytesRead)
+    private OperationStatus DecompressCore(ReadOnlySpan<byte> source, out CompressionSpan<byte> dest, out ulong bytesWritten, out uint bytesRead)
     {
-        bytesRead = ZlibHelper.Decompress(source, dest, out bytesWritten, out var zstatus, this.Options.WindowBits);
+        bytesRead = ZlibHelper.Decompress(source, out dest, out bytesWritten, out var zstatus, this.Options.WindowBits);
         var status = zstatus.ToOperationStatus();
         return status;
     }
 
-    [ExcludeFromCodeCoverage]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool TryDecompressCore(ReadOnlySpan<byte> source, Span<byte> dest, out ulong bytesWritten, out uint bytesRead, out OperationStatus status)
+    private bool TryDecompressCore(ReadOnlySpan<byte> source, out CompressionSpan<byte> dest, out ulong bytesWritten, out uint bytesRead, out OperationStatus status)
     {
-        status = this.DecompressCore(source, dest, out bytesWritten, out bytesRead);
+        status = this.DecompressCore(source, out dest, out bytesWritten, out bytesRead);
         return status == OperationStatus.Done;
     }
 }

@@ -19,6 +19,10 @@ else
     if (-not (Test-Path -Path "zlib"))
     {
         git clone https://github.com/madler/zlib.git
+        cd zlib
+        Write-Host "Applying zlib configure script with zconf.h, zconf.h.in, zutil.h, and gzguts.h patches..."
+        git apply ../zlib_define_fixes.patch
+        cd ..
     }
     else
     {
@@ -51,12 +55,29 @@ else
         mkdir -p runtimes/linux-x64/native
         mkdir -p runtimes/linux-arm/native
         mkdir -p runtimes/linux-arm64/native
-        gcc -O3 -Wall -m32 -shared -o runtimes/linux-x86/native/libZlibSharp.Native.so -DZLIBSHARPNATIVE_EXPORTS -I./zlib zlib/adler32.c zlib/compress.c zlib/crc32.c zlib/deflate.c zlib/gzclose.c zlib/gzlib.c zlib/gzread.c zlib/gzwrite.c zlib/infback.c zlib/inffast.c zlib/inflate.c zlib/inftrees.c zlib/trees.c zlib/uncompr.c zlib/zutil.c main.c -fPIC
-        gcc -O3 -Wall -m64 -shared -o runtimes/linux-x64/native/libZlibSharp.Native.so -DZLIBSHARPNATIVE_EXPORTS -I./zlib zlib/adler32.c zlib/compress.c zlib/crc32.c zlib/deflate.c zlib/gzclose.c zlib/gzlib.c zlib/gzread.c zlib/gzwrite.c zlib/infback.c zlib/inffast.c zlib/inflate.c zlib/inftrees.c zlib/trees.c zlib/uncompr.c zlib/zutil.c main.c -fPIC
-        apt-get install gcc-arm-linux-gnueabihf -y
-        arm-linux-gnueabihf-gcc -O3 -Wall -shared -o runtimes/linux-arm/native/libZlibSharp.Native.so -DZLIBSHARPNATIVE_EXPORTS -I./zlib zlib/adler32.c zlib/compress.c zlib/crc32.c zlib/deflate.c zlib/gzclose.c zlib/gzlib.c zlib/gzread.c zlib/gzwrite.c zlib/infback.c zlib/inffast.c zlib/inflate.c zlib/inftrees.c zlib/trees.c zlib/uncompr.c zlib/zutil.c main.c -fPIC
-        apt-get install gcc-aarch64-linux-gnu -y
-        aarch64-linux-gnu-gcc -O3 -Wall -shared -o runtimes/linux-arm64/native/libZlibSharp.Native.so -DZLIBSHARPNATIVE_EXPORTS -I./zlib zlib/adler32.c zlib/compress.c zlib/crc32.c zlib/deflate.c zlib/gzclose.c zlib/gzlib.c zlib/gzread.c zlib/gzwrite.c zlib/infback.c zlib/inffast.c zlib/inflate.c zlib/inftrees.c zlib/trees.c zlib/uncompr.c zlib/zutil.c main.c -fPIC
+        cd runtimes/linux-x86/native
+        gcc -O3 -Wall -m32 -I../../../zlib -c ../../../zlib/adler32.c ../../../zlib/compress.c ../../../zlib/crc32.c ../../../zlib/deflate.c ../../../zlib/gzclose.c ../../../zlib/gzlib.c ../../../zlib/gzread.c ../../../zlib/gzwrite.c ../../../zlib/infback.c ../../../zlib/inffast.c ../../../zlib/inflate.c ../../../zlib/inftrees.c ../../../zlib/trees.c ../../../zlib/uncompr.c ../../../zlib/zutil.c -fPIC
+        ar rsv libzstatic.a *.o
+        rm -rf *.o
+        g++ -O3 -Wall -m32 -shared -o libZlibSharp.Native.so -DZLIBSHARPNATIVE_EXPORTS -I../../../zlib ../../../main.cpp libzstatic.a -fPIC -fpermissive
+        cd ../../linux-x64/native
+        gcc -O3 -Wall -m64 -I../../../zlib -c ../../../zlib/adler32.c ../../../zlib/compress.c ../../../zlib/crc32.c ../../../zlib/deflate.c ../../../zlib/gzclose.c ../../../zlib/gzlib.c ../../../zlib/gzread.c ../../../zlib/gzwrite.c ../../../zlib/infback.c ../../../zlib/inffast.c ../../../zlib/inflate.c ../../../zlib/inftrees.c ../../../zlib/trees.c ../../../zlib/uncompr.c ../../../zlib/zutil.c -fPIC
+        ar rsv libzstatic.a *.o
+        rm -rf *.o
+        g++ -O3 -Wall -m64 -shared -o libZlibSharp.Native.so -DZLIBSHARPNATIVE_EXPORTS -I../../../zlib ../../../main.cpp libzstatic.a -fPIC -fpermissive
+        apt-get install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf -y
+        cd ../../linux-arm/native/
+        arm-linux-gnueabihf-gcc -O3 -Wall -I../../../zlib -c ../../../zlib/adler32.c ../../../zlib/compress.c ../../../zlib/crc32.c ../../../zlib/deflate.c ../../../zlib/gzclose.c ../../../zlib/gzlib.c ../../../zlib/gzread.c ../../../zlib/gzwrite.c ../../../zlib/infback.c ../../../zlib/inffast.c ../../../zlib/inflate.c ../../../zlib/inftrees.c ../../../zlib/trees.c ../../../zlib/uncompr.c ../../../zlib/zutil.c -fPIC
+        ar rsv libzstatic.a *.o
+        rm -rf *.o
+        arm-linux-gnueabihf-g++ -O3 -Wall -shared -o libZlibSharp.Native.so -DZLIBSHARPNATIVE_EXPORTS -I../../../zlib ../../../main.cpp libzstatic.a -fPIC -fpermissive
+        apt-get install gcc-aarch64-linux-gnu g++-aarch64-linux-gnu -y
+        cd ../../linux-arm64/native/
+        aarch64-linux-gnu-gcc -O3 -Wall -I../../../zlib -c ../../../zlib/adler32.c ../../../zlib/compress.c ../../../zlib/crc32.c ../../../zlib/deflate.c ../../../zlib/gzclose.c ../../../zlib/gzlib.c ../../../zlib/gzread.c ../../../zlib/gzwrite.c ../../../zlib/infback.c ../../../zlib/inffast.c ../../../zlib/inflate.c ../../../zlib/inftrees.c ../../../zlib/trees.c ../../../zlib/uncompr.c ../../../zlib/zutil.c -fPIC
+        ar rsv libzstatic.a *.o
+        rm -rf *.o
+        aarch64-linux-gnu-g++ -O3 -Wall -shared -o libZlibSharp.Native.so -DZLIBSHARPNATIVE_EXPORTS -I../../../zlib ../../../main.cpp libzstatic.a -fPIC -fpermissive
+        cd ../../..
         DotNet-Pack
     }
     if ($IsMacOS)
@@ -68,8 +89,16 @@ else
         mkdir -p runtimes/osx-arm64/native
         if ([bool](Get-Command "gcc" -ErrorAction SilentlyContinue))
         {
-            gcc -O3 -Wall -m64 -dynamiclib -o runtimes/osx-x64/native/libZlibSharp.Native.dylib -DZLIBSHARPNATIVE_EXPORTS -I./zlib zlib/adler32.c zlib/compress.c zlib/crc32.c zlib/deflate.c zlib/gzclose.c zlib/gzlib.c zlib/gzread.c zlib/gzwrite.c zlib/infback.c zlib/inffast.c zlib/inflate.c zlib/inftrees.c zlib/trees.c zlib/uncompr.c zlib/zutil.c main.c -fPIC
-            gcc -O3 -Wall -arch arm64 -dynamiclib -o runtimes/osx-arm64/native/libZlibSharp.Native.dylib -DZLIBSHARPNATIVE_EXPORTS -I./zlib zlib/adler32.c zlib/compress.c zlib/crc32.c zlib/deflate.c zlib/gzclose.c zlib/gzlib.c zlib/gzread.c zlib/gzwrite.c zlib/infback.c zlib/inffast.c zlib/inflate.c zlib/inftrees.c zlib/trees.c zlib/uncompr.c zlib/zutil.c main.c -fPIC
+            cd runtimes/osx-x64/native
+            gcc -O3 -Wall -m64 -I../../../zlib -c ../../../zlib/adler32.c ../../../zlib/compress.c ../../../zlib/crc32.c ../../../zlib/deflate.c ../../../zlib/gzclose.c ../../../zlib/gzlib.c ../../../zlib/gzread.c ../../../zlib/gzwrite.c ../../../zlib/infback.c ../../../zlib/inffast.c ../../../zlib/inflate.c ../../../zlib/inftrees.c ../../../zlib/trees.c ../../../zlib/uncompr.c ../../../zlib/zutil.c -fPIC
+            ar rsv libzstatic.a *.o
+            rm -rf *.o
+            g++ -O3 -Wall -m64 -dynamiclib -o libZlibSharp.Native.dylib -DZLIBSHARPNATIVE_EXPORTS -I../../../zlib ../../../main.cpp libzstatic.a -fPIC -fpermissive
+            cd ../../osx-arm64/native
+            gcc -O3 -Wall -arch arm64 -I../../../zlib -c ../../../zlib/adler32.c ../../../zlib/compress.c ../../../zlib/crc32.c ../../../zlib/deflate.c ../../../zlib/gzclose.c ../../../zlib/gzlib.c ../../../zlib/gzread.c ../../../zlib/gzwrite.c ../../../zlib/infback.c ../../../zlib/inffast.c ../../../zlib/inflate.c ../../../zlib/inftrees.c ../../../zlib/trees.c ../../../zlib/uncompr.c ../../../zlib/zutil.c -fPIC
+            ar rsv libzstatic.a *.o
+            rm -rf *.o
+            g++ -O3 -Wall -arch arm64 -dynamiclib -o libZlibSharp.Native.dylib -DZLIBSHARPNATIVE_EXPORTS -I../../../zlib ../../../main.cpp libzstatic.a -fPIC -fpermissive
             DotNet-Pack
         }
         else

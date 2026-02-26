@@ -3,7 +3,7 @@
   <Import Project="../../Directory.Build.props" />
 
   <PropertyGroup>
-    <Version>1.3.1.0</Version>
+    <Version>1.3.2.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageReleaseNotes>
@@ -16,6 +16,11 @@
       - A new ZlibOptions class which contains all the options for the encoder/decoder.
       - The ZlibResult class has been removed and replaced with output parameters in the ZlibEncoder and ZlibDecoder classes.
       - The hash output parameters have been removed.
+      - The compressed outputs from ZlibEncoder and the decompressed outputs from ZlibDecoder are now output parameters.
+        - This also required a custom CompressionSpan&lt;T&gt; type to be created as now the native side automatically allocate chunks as needed to compress/decompress input data.
+        - This change also makes it not required to allocate, then try to compress/decompress to get the size needed, and then perform compress/decompress again which improves performance.
+        - Also in older versions of ZlibSharp to get the Decompressed Size it would allocate a 2 GB sized buffer and then try to decompress and return its real size to decompress. This was a waste of clock cycles and memory.
+        - Note: The native side creates chunks of 256 KB at a time so the waste of memory is minimal while also keeping performance in mind.
     </PackageReleaseNotes>
     <Description>
       A high performance .NET zlib wrapper that is span based and offers more functionality over System.IO.Compression by allowing more developer control over how the data is compressed and by avoiding .NET's streams entirely.

@@ -463,3 +463,7 @@ zlib/
 *.rar
 *.zip
 *.7z
+
+# test code coverage folders must be ignored at all times.
+coverage/
+history/

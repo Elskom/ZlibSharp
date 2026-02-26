@@ -5,7 +5,6 @@
 
 namespace ZlibSharp.Internal;
 
-[ExcludeFromCodeCoverage]
 internal sealed class NativeDllLoadContext : AssemblyLoadContext
 {
     public NativeDllLoadContext()
@@ -13,6 +12,7 @@ internal sealed class NativeDllLoadContext : AssemblyLoadContext
     {
     }
 
+    [ExcludeFromCodeCoverage]
     protected override Assembly Load(AssemblyName assemblyName)
     {
         if (IsLoadedToDefaultContext(assemblyName.FullName))
@@ -24,6 +24,7 @@ internal sealed class NativeDllLoadContext : AssemblyLoadContext
         return this.LoadFromAssemblyPath($"{AppContext.BaseDirectory}{assemblyName.Name}.dll");
     }
 
+    [ExcludeFromCodeCoverage]
     protected override IntPtr LoadUnmanagedDll(string unmanagedDllName)
     {
         var libraryPath = GetNativeDllPath(unmanagedDllName);
@@ -38,23 +39,50 @@ internal sealed class NativeDllLoadContext : AssemblyLoadContext
     internal nint LoadNativeDll(string nativeDllFile)
         => this.LoadUnmanagedDll(nativeDllFile);
 
+    [ExcludeFromCodeCoverage]
     private static string GetNativeDllPath(string dllFileName)
     {
         var result = Path.Combine(AppContext.BaseDirectory, "runtimes", OSHelpers.RuntimeIdentifier, "native", dllFileName);
         return !File.Exists(result) ? null! : result;
     }
 
-    private static bool IsLoadedToDefaultContext(string assemblyFullName) =>
+    [ExcludeFromCodeCoverage]
+    private static bool IsLoadedToDefaultContext(string assemblyFullName)
+    {
+        var result = false;
 #if NET
-        Default.Assemblies.Any(assembly => assembly.FullName is not null && assembly.FullName.Equals(assemblyFullName, StringComparison.Ordinal));
+        foreach (var assembly in Default.Assemblies)
 #else
-        AppDomain.CurrentDomain.GetAssemblies().Any(assembly => assembly.FullName is not null && assembly.FullName.Equals(assemblyFullName, StringComparison.Ordinal));
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
 #endif
+        {
+            if (assembly.FullName is not null && assembly.FullName.Equals(assemblyFullName, StringComparison.Ordinal))
+            {
+                result = true;
+                break;
+            }
+        }
 
-    private static Assembly GetFromDefaultContext(string assemblyFullName) =>
+        return result;
+    }
+
+    [ExcludeFromCodeCoverage]
+    private static Assembly GetFromDefaultContext(string assemblyFullName)
+    {
+        Assembly result = null!;
 #if NET
-        Default.Assemblies.FirstOrDefault(assembly => assembly.FullName is not null && assembly.FullName.Equals(assemblyFullName, StringComparison.Ordinal))!;
+        foreach (var assembly in Default.Assemblies)
 #else
-        AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assembly => assembly.FullName is not null && assembly.FullName.Equals(assemblyFullName, StringComparison.Ordinal));
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
 #endif
+        {
+            if (assembly.FullName is not null && assembly.FullName.Equals(assemblyFullName, StringComparison.Ordinal))
+            {
+                result = assembly;
+                break;
+            }
+        }
+
+        return result;
+    }
 }

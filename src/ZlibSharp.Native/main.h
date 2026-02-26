@@ -1,3 +1,8 @@
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #if defined(_WIN32) || defined(__CYGWIN__)
 #ifdef ZLIBSHARPNATIVE_EXPORTS
 #define ZLIBSHARP_NATIVE_EXTERN __declspec(dllexport)
@@ -29,20 +34,36 @@
 
 #include <zlib.h>
 
+#ifdef __cplusplus
+constexpr auto CHUNK_SIZE = 262144; // 256 KB chunks for decompression
+#else
+#define CHUNK_SIZE 262144 // 256 KB chunks for decompression
+#endif
+
+typedef struct _internal_members {
+  z_streamp stream;
+  std::vector<Byte> chunks;
+} internal_members, *pinternal_members;
+
 typedef struct _compress_decompress_args {
   // shared args
   Byte *source;
   Byte *dest;
   uInt source_length;
-  uInt dest_length;
   int windowBits;
   int status;
   // compress specific args
   int compressionLevel;
   int strategy;
   // decompress specific args
-  uLong bytesWritten;
+  std::uint64_t bytesWritten;
+  pinternal_members reserved;
 } compress_decompress_args, *pcompress_decompress_args;
 
 ZLIBSHARP_NATIVE_EXTERN int Compress(pcompress_decompress_args args);
 ZLIBSHARP_NATIVE_EXTERN uInt Decompress(pcompress_decompress_args args);
+ZLIBSHARP_NATIVE_EXTERN void FreeOutput(Byte *dest);
+
+#ifdef __cplusplus
+}
+#endif

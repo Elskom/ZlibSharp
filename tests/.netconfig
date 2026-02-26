@@ -1,0 +1,8 @@
+# .netconfig is awesome: https://dotnetconfig.org
+
+[reportgenerator]
+	reporttypes = Html_Dark
+	report = coverage.codacy.opencover.xml
+	sourcedir = ../src/ZlibSharp/
+	historydirectory = ./history
+	targetdirectory = ./coverage

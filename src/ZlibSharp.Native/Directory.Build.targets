@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(MSBuildProjectExtension)' != '.csproj'">
-    <ClCompile Include="main.c" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include=".\zlib\adler32.c" />
     <ClCompile Include=".\zlib\compress.c" />
     <ClCompile Include=".\zlib\crc32.c" />

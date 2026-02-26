@@ -12,4 +12,8 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <Target Name="Coverage" AfterTargets="VSTest">
+    <ReportGenerator ProjectDirectory="$(MSBuildProjectDirectory)" TargetDirectory="$(MSBuildProjectDirectory)/coverage" />
+  </Target>
+
 </Project>

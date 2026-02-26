@@ -5,27 +5,12 @@
 
 namespace ZlibSharp.Internal;
 
-[ExcludeFromCodeCoverage]
 internal static class OSHelpers
 {
-    internal static readonly Dictionary<string, OSPlatform> AdditionalOSPlatforms = new()
-    {
-        { "IOS", OSPlatform.Create("IOS") },
-        { "MacCatalyst", OSPlatform.Create("MACCATALYST") },
-        { "FreeBSD", OSPlatform.Create("FREEBSD") },
-        { "Android", OSPlatform.Create("ANDROID") },
-    };
-
     internal static bool nativeLibraryLoaded = false;
     internal static NativeDllLoadContext loadContext = new();
 
-    internal static int MaxArrayLength =>
-#if NET
-        Array.MaxLength;
-#else
-        0X7FFFFFC7; // 2,147,483,591
-#endif
-
+    [ExcludeFromCodeCoverage]
     internal static string RuntimeIdentifier =>
             AppContext.GetData("RUNTIME_IDENTIFIER") as string ?? (Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture) switch
             {
@@ -40,27 +25,36 @@ internal static class OSHelpers
                 _ => throw new InvalidOperationException("Platform not handled in the RuntimeIdentifier helper for netstandard2.0."),
             };
 
-    internal static bool IsWindows() =>
-        RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+    internal static OSPlatform IOS { get; } = OSPlatform.Create("IOS");
+    internal static OSPlatform MacCatalyst { get; } = OSPlatform.Create("MACCATALYST");
+    internal static OSPlatform FreeBSD { get; } = OSPlatform.Create("FREEBSD");
+    internal static OSPlatform Android { get; } = OSPlatform.Create("ANDROID");
 
-    internal static bool IsLinux() =>
-        RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+    internal static bool IsWindows()
+        => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
-    internal static bool IsFreeBSD() =>
-        RuntimeInformation.IsOSPlatform(AdditionalOSPlatforms["FreeBSD"]);
+    internal static bool IsLinux()
+        => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
 
-    internal static bool IsAndroid() =>
-        RuntimeInformation.IsOSPlatform(AdditionalOSPlatforms["Android"]);
+    [ExcludeFromCodeCoverage]
+    internal static bool IsFreeBSD()
+        => RuntimeInformation.IsOSPlatform(FreeBSD);
 
-    internal static bool IsMacOS() =>
-        RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+    [ExcludeFromCodeCoverage]
+    internal static bool IsAndroid()
+        => RuntimeInformation.IsOSPlatform(Android);
 
-    internal static bool IsMacCatalyst() =>
-        RuntimeInformation.IsOSPlatform(AdditionalOSPlatforms["MacCatalyst"]);
+    internal static bool IsMacOS()
+        => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
 
-    internal static bool IsIOS() =>
-        RuntimeInformation.IsOSPlatform(AdditionalOSPlatforms["IOS"]) && !IsMacCatalyst();
+    internal static bool IsMacCatalyst()
+        => RuntimeInformation.IsOSPlatform(MacCatalyst);
 
+    [ExcludeFromCodeCoverage]
+    internal static bool IsIOS()
+        => RuntimeInformation.IsOSPlatform(IOS) && !IsMacCatalyst();
+
+    [ExcludeFromCodeCoverage]
     internal static string ZlibLibFileNameByCurrentOS
         => (IsWindows(), IsLinux() || IsFreeBSD() || IsAndroid(), IsMacOS() || IsMacCatalyst()) switch
     {

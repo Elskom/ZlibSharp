@@ -1,0 +1,346 @@
+diff --git a/configure b/configure
+index bc72344..d4f7765 100755
+--- a/configure
++++ b/configure
+@@ -590,6 +590,9 @@ EOF
+   fi
+ fi
+ 
++# copy clean zconf.h for subsequent edits
++cp -p ${SRCDIR}zconf.h.in zconf.h
++
+ echo >> configure.log
+ 
+ # check for large file support, and if none, check for fseeko()
+@@ -598,8 +601,8 @@ cat > $test.c <<EOF
+ off64_t dummy = 0;
+ EOF
+ if try $CC -c $CFLAGS -D_LARGEFILE64_SOURCE=1 $test.c; then
+-  CFLAGS="${CFLAGS} -D_LARGEFILE64_SOURCE=1"
+-  SFLAGS="${SFLAGS} -D_LARGEFILE64_SOURCE=1"
++  sed < zconf.h "/^#if HAVE_LF64_SRC-0.* may be/s/ HAVE_LF64_SRC-0\(.*\) may be/ 1\1 was/" > zconf.temp.h
++  mv zconf.temp.h zconf.h
+   ALL="${ALL} all64"
+   TEST="${TEST} test64"
+   echo "Checking for off64_t... Yes." | tee -a configure.log
+@@ -617,8 +620,8 @@ EOF
+   if try $CC $CFLAGS $LDFLAGS -o $test $test.c; then
+     echo "Checking for fseeko... Yes." | tee -a configure.log
+   else
+-    CFLAGS="${CFLAGS} -DNO_FSEEKO"
+-    SFLAGS="${SFLAGS} -DNO_FSEEKO"
++    sed < zconf.h "/^#if FSEEKO_MISSING-0.* may be/s/ FSEEKO_MISSING-0\(.*\) may be/ 1\1 was/" > zconf.temp.h
++    mv zconf.temp.h zconf.h
+     echo "Checking for fseeko... No." | tee -a configure.log
+   fi
+ fi
+@@ -634,14 +637,11 @@ EOF
+ if try $CC $CFLAGS $LDFLAGS -o $test $test.c; then
+   echo "Checking for strerror... Yes." | tee -a configure.log
+ else
+-  CFLAGS="${CFLAGS} -DNO_STRERROR"
+-  SFLAGS="${SFLAGS} -DNO_STRERROR"
++  sed < zconf.h "/^#if STRERROR_MISSING-0.* may be/s/ STRERROR_MISSING-0\(.*\) may be/ 1\1 was/" > zconf.temp.h
++  mv zconf.temp.h zconf.h
+   echo "Checking for strerror... No." | tee -a configure.log
+ fi
+ 
+-# copy clean zconf.h for subsequent edits
+-cp -p ${SRCDIR}zconf.h.in zconf.h
+-
+ echo >> configure.log
+ 
+ # check for unistd.h and save result in zconf.h
+@@ -763,16 +763,16 @@ EOF
+     if try $CC -c $CFLAGS $test.c; then
+       echo "Checking for return value of vsnprintf()... Yes." | tee -a configure.log
+     else
+-      CFLAGS="$CFLAGS -DHAS_vsnprintf_void"
+-      SFLAGS="$SFLAGS -DHAS_vsnprintf_void"
++      sed < zconf.h "/^#if VSNPRINTF_VOID_RET-0.* may be/s/ VSNPRINTF_VOID_RET-0\(.*\) may be/ 1\1 was/" > zconf.temp.h
++      mv zconf.temp.h zconf.h
+       echo "Checking for return value of vsnprintf()... No." | tee -a configure.log
+       echo "  WARNING: apparently vsnprintf() does not return a value. zlib" | tee -a configure.log
+       echo "  can build but will be open to possible string-format security" | tee -a configure.log
+       echo "  vulnerabilities." | tee -a configure.log
+     fi
+   else
+-    CFLAGS="$CFLAGS -DNO_vsnprintf"
+-    SFLAGS="$SFLAGS -DNO_vsnprintf"
++    sed < zconf.h "/^#if VSNPRINTF_MISSING-0.* may be/s/ VSNPRINTF_MISSING-0\(.*\) may be/ 1\1 was/" > zconf.temp.h
++    mv zconf.temp.h zconf.h
+     echo "Checking for vsnprintf() in stdio.h... No." | tee -a configure.log
+     echo "  WARNING: vsnprintf() not found, falling back to vsprintf(). zlib" | tee -a configure.log
+     echo "  can build but will be open to possible buffer-overflow security" | tee -a configure.log
+@@ -804,8 +804,8 @@ EOF
+     if try $CC -c $CFLAGS $test.c; then
+       echo "Checking for return value of vsprintf()... Yes." | tee -a configure.log
+     else
+-      CFLAGS="$CFLAGS -DHAS_vsprintf_void"
+-      SFLAGS="$SFLAGS -DHAS_vsprintf_void"
++      sed < zconf.h "/^#if VSPRINTF_VOID_RET-0.* may be/s/ VSPRINTF_VOID_RET-0\(.*\) may be/ 1\1 was/" > zconf.temp.h
++      mv zconf.temp.h zconf.h
+       echo "Checking for return value of vsprintf()... No." | tee -a configure.log
+       echo "  WARNING: apparently vsprintf() does not return a value. zlib" | tee -a configure.log
+       echo "  can build but will be open to possible string-format security" | tee -a configure.log
+@@ -850,16 +850,16 @@ EOF
+     if try $CC -c $CFLAGS $test.c; then
+       echo "Checking for return value of snprintf()... Yes." | tee -a configure.log
+     else
+-      CFLAGS="$CFLAGS -DHAS_snprintf_void"
+-      SFLAGS="$SFLAGS -DHAS_snprintf_void"
++      sed < zconf.h "/^#if SNPRINTF_VOID_RET-0.* may be/s/ SNPRINTF_VOID_RET-0\(.*\) may be/ 1\1 was/" > zconf.temp.h
++      mv zconf.temp.h zconf.h
+       echo "Checking for return value of snprintf()... No." | tee -a configure.log
+       echo "  WARNING: apparently snprintf() does not return a value. zlib" | tee -a configure.log
+       echo "  can build but will be open to possible string-format security" | tee -a configure.log
+       echo "  vulnerabilities." | tee -a configure.log
+     fi
+   else
+-    CFLAGS="$CFLAGS -DNO_snprintf"
+-    SFLAGS="$SFLAGS -DNO_snprintf"
++    sed < zconf.h "/^#if SNPRINTF_MISSING-0.* may be/s/ SNPRINTF_MISSING-0\(.*\) may be/ 1\1 was/" > zconf.temp.h
++    mv zconf.temp.h zconf.h
+     echo "Checking for snprintf() in stdio.h... No." | tee -a configure.log
+     echo "  WARNING: snprintf() not found, falling back to sprintf(). zlib" | tee -a configure.log
+     echo "  can build but will be open to possible buffer-overflow security" | tee -a configure.log
+@@ -885,8 +885,8 @@ EOF
+     if try $CC -c $CFLAGS $test.c; then
+       echo "Checking for return value of sprintf()... Yes." | tee -a configure.log
+     else
+-      CFLAGS="$CFLAGS -DHAS_sprintf_void"
+-      SFLAGS="$SFLAGS -DHAS_sprintf_void"
++      sed < zconf.h "/^#if SPRINTF_VOID_RET-0.* may be/s/ SPRINTF_VOID_RET-0\(.*\) may be/ 1\1 was/" > zconf.temp.h
++      mv zconf.temp.h zconf.h
+       echo "Checking for return value of sprintf()... No." | tee -a configure.log
+       echo "  WARNING: apparently sprintf() does not return a value. zlib" | tee -a configure.log
+       echo "  can build but will be open to possible string-format security" | tee -a configure.log
+@@ -907,8 +907,8 @@ int main()
+ }
+ EOF
+   if tryboth $CC -c $CFLAGS $test.c; then
+-    CFLAGS="$CFLAGS -DHAVE_HIDDEN"
+-    SFLAGS="$SFLAGS -DHAVE_HIDDEN"
++    sed < zconf.h "/^#if HAVE_ATTR_HIDDEN-0.* may be/s/ HAVE_ATTR_HIDDEN-0\(.*\) may be/ 1\1 was/" > zconf.temp.h
++    mv zconf.temp.h zconf.h
+     echo "Checking for attribute(visibility) support... Yes." | tee -a configure.log
+   else
+     echo "Checking for attribute(visibility) support... No." | tee -a configure.log
+diff --git a/gzguts.h b/gzguts.h
+index 266305d..ca84019 100644
+--- a/gzguts.h
++++ b/gzguts.h
+@@ -3,18 +3,8 @@
+  * For conditions of distribution and use, see copyright notice in zlib.h
+  */
+ 
+-#ifdef _LARGEFILE64_SOURCE
+-#  ifndef _LARGEFILE_SOURCE
+-#    define _LARGEFILE_SOURCE 1
+-#  endif
+-#  undef _FILE_OFFSET_BITS
+-#  undef _TIME_BITS
+-#endif
+-
+-#ifdef HAVE_HIDDEN
+-#  define ZLIB_INTERNAL __attribute__((visibility ("hidden")))
+-#else
+-#  define ZLIB_INTERNAL
++#ifndef ZLIB_INTERNAL
++#define ZLIB_INTERNAL
+ #endif
+ 
+ #if defined(_WIN32)
+@@ -29,8 +19,8 @@
+ #  endif
+ #endif
+ 
+-#include <stdio.h>
+ #include "zlib.h"
++#include <stdio.h>
+ #ifdef STDC
+ #  include <string.h>
+ #  include <stdlib.h>
+diff --git a/zconf.h b/zconf.h
+index 828ca61..0887ed8 100644
+--- a/zconf.h
++++ b/zconf.h
+@@ -337,6 +337,43 @@
+ #  endif
+ #endif
+ 
++#if HAVE_LF64_SRC-0     /* may be set to #if 1 by ./configure */
++#  define _LARGEFILE64_SOURCE 1
++#endif
++
++#if FSEEKO_MISSING-0     /* may be set to #if 1 by ./configure */
++#  define NO_FSEEKO
++#endif
++
++#if HAVE_ATTR_HIDDEN-0     /* may be set to #if 1 by ./configure */
++#  define HAVE_HIDDEN
++#endif
++
++#ifdef _LARGEFILE64_SOURCE
++#  ifndef _LARGEFILE_SOURCE
++#    define _LARGEFILE_SOURCE 1
++#  endif
++#  undef _FILE_OFFSET_BITS
++#  undef _TIME_BITS
++#endif
++
++/*
++ * The idea behind this is so the attribute would be defined only once
++ * in the source files from zconf.h.
++ * The other issue is that if someone builds zlib without using the
++ * makefile manually using their C compiler and they do not know to
++ * first define HAVE_HIDDEN and/or _LARGEFILE64_SOURCE if the configure
++ * script detects that their compiler supports them. This can result in
++ * a build that may have important apis missing/internal bits that are
++ * not hidden, but would have had they used the makefile.
++ * This change also simplifies the makefile as then it would not need
++ * to define them either resulting in a reproducible build either way.
++ */
++#if defined(HAVE_HIDDEN) && defined(ZLIB_INTERNAL)
++#  undef ZLIB_INTERNAL // Just to redefine this with the attribute.
++#  define ZLIB_INTERNAL __attribute__((visibility ("hidden")))
++#endif
++
+ #if defined(WINDOWS) || defined(WIN32)
+    /* If building or using zlib as a DLL, define ZLIB_DLL.
+     * This is not mandatory, but it offers a little performance increase.
+@@ -451,6 +488,34 @@ typedef uLong FAR uLongf;
+ #  define Z_HAVE_STDARG_H
+ #endif
+ 
++#if STRERROR_MISSING-0     /* may be set to #if 1 by ./configure */
++# define NO_STRERROR
++#endif
++
++#if VSNPRINTF_VOID_RET-0     /* may be set to #if 1 by ./configure */
++#  define HAS_vsnprintf_void
++#endif
++
++#if VSNPRINTF_MISSING-0     /* may be set to #if 1 by ./configure */
++#  define NO_vsnprintf
++#endif
++
++#if VSPRINTF_VOID_RET-0     /* may be set to #if 1 by ./configure */
++#  define HAS_vsprintf_void
++#endif
++
++#if SNPRINTF_VOID_RET-0     /* may be set to #if 1 by ./configure */
++#  define HAS_snprintf_void
++#endif
++
++#if SNPRINTF_MISSING-0     /* may be set to #if 1 by ./configure */
++#  define NO_snprintf
++#endif
++
++#if SPRINTF_VOID_RET-0     /* may be set to #if 1 by ./configure */
++#  define HAS_sprintf_void
++#endif
++
+ #ifdef STDC
+ #  ifndef Z_SOLO
+ #    include <sys/types.h>      /* for off_t */
+diff --git a/zconf.h.in b/zconf.h.in
+index 828ca61..cc76ef3 100644
+--- a/zconf.h.in
++++ b/zconf.h.in
+@@ -337,6 +337,43 @@
+ #  endif
+ #endif
+ 
++#if HAVE_LF64_SRC-0     /* may be set to #if 1 by ./configure */
++#  define _LARGEFILE64_SOURCE 1
++#endif
++
++#if FSEEKO_MISSING-0     /* may be set to #if 1 by ./configure */
++#  define NO_FSEEKO
++#endif
++
++#if HAVE_ATTR_HIDDEN-0     /* may be set to #if 1 by ./configure */
++#  define HAVE_HIDDEN
++#endif
++
++#ifdef _LARGEFILE64_SOURCE
++#  ifndef _LARGEFILE_SOURCE
++#    define _LARGEFILE_SOURCE 1
++#  endif
++#  undef _FILE_OFFSET_BITS
++#  undef _TIME_BITS
++#endif
++
++/*
++ * The idea behind this is so the attribute would be defined only once
++ * in the source files from zconf.h.
++ * The other issue is that if someone builds zlib without using the
++ * makefile manually using their C compiler and they do not know to
++ * first define HAVE_HIDDEN and/or _LARGEFILE64_SOURCE if the configure
++ * script detects that their compiler supports them. This can result in
++ * a build that may have important apis missing/internal bits that are
++ * not hidden, but would have had they used the makefile.
++ * This change also simplifies the makefile as then it would not need
++ * to define them either resulting in a reproducible build either way.
++ */
++#if defined(HAVE_HIDDEN) && defined(ZLIB_INTERNAL)
++#  undef ZLIB_INTERNAL // Just to redefine this with the attribute.
++#  define ZLIB_INTERNAL __attribute__((visibility ("hidden")))
++#endif
++
+ #if defined(WINDOWS) || defined(WIN32)
+    /* If building or using zlib as a DLL, define ZLIB_DLL.
+     * This is not mandatory, but it offers a little performance increase.
+@@ -451,6 +488,34 @@ typedef uLong FAR uLongf;
+ #  define Z_HAVE_STDARG_H
+ #endif
+ 
++#if STRERROR_MISSING-0     /* may be set to #if 1 by ./configure */
++#  define NO_STRERROR
++#endif
++
++#if VSNPRINTF_VOID_RET-0     /* may be set to #if 1 by ./configure */
++#  define HAS_vsnprintf_void
++#endif
++
++#if VSNPRINTF_MISSING-0     /* may be set to #if 1 by ./configure */
++#  define NO_vsnprintf
++#endif
++
++#if VSPRINTF_VOID_RET-0     /* may be set to #if 1 by ./configure */
++#  define HAS_vsprintf_void
++#endif
++
++#if SNPRINTF_VOID_RET-0     /* may be set to #if 1 by ./configure */
++#  define HAS_snprintf_void
++#endif
++
++#if SNPRINTF_MISSING-0     /* may be set to #if 1 by ./configure */
++#  define NO_snprintf
++#endif
++
++#if SPRINTF_VOID_RET-0     /* may be set to #if 1 by ./configure */
++#  define HAS_sprintf_void
++#endif
++
+ #ifdef STDC
+ #  ifndef Z_SOLO
+ #    include <sys/types.h>      /* for off_t */
+diff --git a/zutil.h b/zutil.h
+index a9bc23c..6201af8 100644
+--- a/zutil.h
++++ b/zutil.h
+@@ -13,10 +13,8 @@
+ #ifndef ZUTIL_H
+ #define ZUTIL_H
+ 
+-#ifdef HAVE_HIDDEN
+-#  define ZLIB_INTERNAL __attribute__((visibility ("hidden")))
+-#else
+-#  define ZLIB_INTERNAL
++#ifndef ZLIB_INTERNAL
++#define ZLIB_INTERNAL
+ #endif
+ 
+ #include "zlib.h"

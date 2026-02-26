@@ -5,47 +5,45 @@
 
 namespace ZlibSharp.Internal;
 
-[ExcludeFromCodeCoverage]
 internal static unsafe class ZlibHelper
 {
-    internal static ulong Compress(ReadOnlySpan<byte> source, Span<byte> dest, ZlibCompressionLevel compressionLevel, ZlibWindowBits windowBits, ZlibCompressionStrategy strategy, out ZlibStatus status)
+    internal static ulong Compress(ReadOnlySpan<byte> source, ZlibCompressionLevel compressionLevel, ZlibWindowBits windowBits, ZlibCompressionStrategy strategy, out CompressionSpan<byte> dest, out ZlibStatus status)
     {
         OSHelpers.LoadNativeLibrary();
         CompressDecompressArgs args = default;
         var argsPtr = &args;
         fixed (byte* sourcePtr = source)
-        fixed (byte* destPtr = dest)
         {
             argsPtr->source = sourcePtr;
             argsPtr->source_length = (uint)source.Length;
-            argsPtr->dest = destPtr;
-            argsPtr->dest_length = (uint)dest.Length;
             argsPtr->compressionLevel = compressionLevel;
             argsPtr->windowBits = windowBits;
             argsPtr->strategy = strategy;
             _ = UnsafeNativeMethods.Compress(argsPtr);
+            var bytesWritten = argsPtr->bytesWritten.ToUInt64();
+            dest = CompressionSpan<byte>.Create(argsPtr->dest, bytesWritten);
+            UnsafeNativeMethods.FreeOutput(argsPtr->dest);
             status = argsPtr->status;
-            return argsPtr->bytesWritten.ToUInt64();
+            return bytesWritten;
         }
     }
 
     //Decompress returns avail_in, allowing users to reallocate and continue decompressing remaining data
     //should Dest buffer be under-allocated
-    internal static uint Decompress(ReadOnlySpan<byte> source, Span<byte> dest, out ulong bytesWritten, out ZlibStatus status, ZlibWindowBits windowBits)
+    internal static uint Decompress(ReadOnlySpan<byte> source, out CompressionSpan<byte> dest, out ulong bytesWritten, out ZlibStatus status, ZlibWindowBits windowBits)
     {
         OSHelpers.LoadNativeLibrary();
         CompressDecompressArgs args = default;
         var argsPtr = &args;
         fixed (byte* sourcePtr = source)
-        fixed (byte* destPtr = dest)
         {
             argsPtr->source = sourcePtr;
             argsPtr->source_length = (uint)source.Length;
-            argsPtr->dest = destPtr;
-            argsPtr->dest_length = (uint)dest.Length;
             argsPtr->windowBits = windowBits;
             var result = UnsafeNativeMethods.Decompress(argsPtr);
             bytesWritten = argsPtr->bytesWritten.ToUInt64();
+            dest = CompressionSpan<byte>.Create(argsPtr->dest, bytesWritten);
+            UnsafeNativeMethods.FreeOutput(argsPtr->dest);
             status = argsPtr->status;
             return result;
         }
