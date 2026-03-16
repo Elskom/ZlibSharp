@@ -99,6 +99,7 @@ else
             ar rsv libzstatic.a *.o
             rm -rf *.o
             g++ -O3 -Wall -arch arm64 -dynamiclib -o libZlibSharp.Native.dylib -DZLIBSHARPNATIVE_EXPORTS -I../../../zlib ../../../main.cpp libzstatic.a -fPIC -fpermissive
+            cd ../../..
             DotNet-Pack
         }
         else
