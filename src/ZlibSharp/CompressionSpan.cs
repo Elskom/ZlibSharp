@@ -68,4 +68,50 @@ public readonly struct CompressionSpan<T>
 
         return new(tmp, bytesWritten);
     }
+
+    /// <summary>
+    /// Creates a new instance of <see cref="CompressionSpan{T}"/> with the specified buffer and length.
+    /// </summary>
+    /// <param name="buffer">The input buffer to use.</param>
+    /// <param name="length">The length of the buffer.</param>
+    /// <returns></returns>
+    [ExcludeFromCodeCoverage]
+    public static CompressionSpan<T> Create(T[] buffer, ulong length)
+        => new(buffer, length);
+
+    /// <summary>
+    /// Creates a new <see cref="CompressionSpan{T}"/> instance from the specified span.
+    /// </summary>
+    /// <param name="buffer">The span containing the data to be used for the compression span.</param>
+    /// <returns>A <see cref="CompressionSpan{T}"/> that represents the data in the specified span.</returns>
+    [ExcludeFromCodeCoverage]
+    public static CompressionSpan<T> Create(Span<T> buffer)
+        => Create(buffer.ToArray(), (ulong)buffer.Length);
+
+    /// <summary>
+    /// Creates a new <see cref="CompressionSpan{T}"/> instance from the specified read-only span.
+    /// </summary>
+    /// <param name="buffer">The read-only span containing the data to be used for the compression span.</param>
+    /// <returns>A <see cref="CompressionSpan{T}"/> that represents the data in the specified read-only span.</returns>
+    [ExcludeFromCodeCoverage]
+    public static CompressionSpan<T> Create(ReadOnlySpan<T> buffer)
+        => Create(buffer.ToArray(), (ulong)buffer.Length);
+
+    /// <summary>
+    /// Creates a new <see cref="CompressionSpan{T}"/> instance from the specified memory.
+    /// </summary>
+    /// <param name="buffer">The memory containing the data to be used for the compression span.</param>
+    /// <returns>A <see cref="CompressionSpan{T}"/> that represents the data in the specified memory.</returns>
+    [ExcludeFromCodeCoverage]
+    public static CompressionSpan<T> Create(Memory<T> buffer)
+        => Create(buffer.ToArray(), (ulong)buffer.Length);
+
+    /// <summary>
+    /// Creates a new <see cref="CompressionSpan{T}"/> instance from the specified read-only memory.
+    /// </summary>
+    /// <param name="buffer">The read-only memory containing the data to be used for the compression span.</param>
+    /// <returns>A <see cref="CompressionSpan{T}"/> that represents the data in the specified read-only memory.</returns>
+    [ExcludeFromCodeCoverage]
+    public static CompressionSpan<T> Create(ReadOnlyMemory<T> buffer)
+        => Create(buffer.ToArray(), (ulong)buffer.Length);
 }
