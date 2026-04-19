@@ -22,6 +22,7 @@
     <PackageReference Include="ReportGenerator" Version="*-*" />
     <PackageReference Include="FluentAssertions" Version="*-*" />
     <ProjectReference Include="../src/ZlibSharp/ZlibSharp.csproj" />
+    <PackageReference Include="System.IO.Hashing" Version="*-*" />
   </ItemGroup>
 
 </Project>

@@ -59,24 +59,24 @@ else
         gcc -O3 -Wall -m32 -I../../../zlib -c ../../../zlib/adler32.c ../../../zlib/compress.c ../../../zlib/crc32.c ../../../zlib/deflate.c ../../../zlib/gzclose.c ../../../zlib/gzlib.c ../../../zlib/gzread.c ../../../zlib/gzwrite.c ../../../zlib/infback.c ../../../zlib/inffast.c ../../../zlib/inflate.c ../../../zlib/inftrees.c ../../../zlib/trees.c ../../../zlib/uncompr.c ../../../zlib/zutil.c -fPIC
         ar rsv libzstatic.a *.o
         rm -rf *.o
-        g++ -O3 -Wall -m32 -shared -o libZlibSharp.Native.so -DZLIBSHARPNATIVE_EXPORTS -I../../../zlib ../../../main.cpp libzstatic.a -fPIC -fpermissive
+        g++ -std=c++20 -O3 -Wall -m32 -shared -o libZlibSharp.Native.so -DZLIBSHARPNATIVE_EXPORTS -I../../../zlib ../../../main.cpp libzstatic.a -fPIC -fpermissive
         cd ../../linux-x64/native
         gcc -O3 -Wall -m64 -I../../../zlib -c ../../../zlib/adler32.c ../../../zlib/compress.c ../../../zlib/crc32.c ../../../zlib/deflate.c ../../../zlib/gzclose.c ../../../zlib/gzlib.c ../../../zlib/gzread.c ../../../zlib/gzwrite.c ../../../zlib/infback.c ../../../zlib/inffast.c ../../../zlib/inflate.c ../../../zlib/inftrees.c ../../../zlib/trees.c ../../../zlib/uncompr.c ../../../zlib/zutil.c -fPIC
         ar rsv libzstatic.a *.o
         rm -rf *.o
-        g++ -O3 -Wall -m64 -shared -o libZlibSharp.Native.so -DZLIBSHARPNATIVE_EXPORTS -I../../../zlib ../../../main.cpp libzstatic.a -fPIC -fpermissive
+        g++ -std=c++20 -O3 -Wall -m64 -shared -o libZlibSharp.Native.so -DZLIBSHARPNATIVE_EXPORTS -I../../../zlib ../../../main.cpp libzstatic.a -fPIC -fpermissive
         apt-get install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf -y
         cd ../../linux-arm/native/
         arm-linux-gnueabihf-gcc -O3 -Wall -I../../../zlib -c ../../../zlib/adler32.c ../../../zlib/compress.c ../../../zlib/crc32.c ../../../zlib/deflate.c ../../../zlib/gzclose.c ../../../zlib/gzlib.c ../../../zlib/gzread.c ../../../zlib/gzwrite.c ../../../zlib/infback.c ../../../zlib/inffast.c ../../../zlib/inflate.c ../../../zlib/inftrees.c ../../../zlib/trees.c ../../../zlib/uncompr.c ../../../zlib/zutil.c -fPIC
         ar rsv libzstatic.a *.o
         rm -rf *.o
-        arm-linux-gnueabihf-g++ -O3 -Wall -shared -o libZlibSharp.Native.so -DZLIBSHARPNATIVE_EXPORTS -I../../../zlib ../../../main.cpp libzstatic.a -fPIC -fpermissive
+        arm-linux-gnueabihf-g++ -std=c++20 -O3 -Wall -shared -o libZlibSharp.Native.so -DZLIBSHARPNATIVE_EXPORTS -I../../../zlib ../../../main.cpp libzstatic.a -fPIC -fpermissive
         apt-get install gcc-aarch64-linux-gnu g++-aarch64-linux-gnu -y
         cd ../../linux-arm64/native/
         aarch64-linux-gnu-gcc -O3 -Wall -I../../../zlib -c ../../../zlib/adler32.c ../../../zlib/compress.c ../../../zlib/crc32.c ../../../zlib/deflate.c ../../../zlib/gzclose.c ../../../zlib/gzlib.c ../../../zlib/gzread.c ../../../zlib/gzwrite.c ../../../zlib/infback.c ../../../zlib/inffast.c ../../../zlib/inflate.c ../../../zlib/inftrees.c ../../../zlib/trees.c ../../../zlib/uncompr.c ../../../zlib/zutil.c -fPIC
         ar rsv libzstatic.a *.o
         rm -rf *.o
-        aarch64-linux-gnu-g++ -O3 -Wall -shared -o libZlibSharp.Native.so -DZLIBSHARPNATIVE_EXPORTS -I../../../zlib ../../../main.cpp libzstatic.a -fPIC -fpermissive
+        aarch64-linux-gnu-g++ -std=c++20 -O3 -Wall -shared -o libZlibSharp.Native.so -DZLIBSHARPNATIVE_EXPORTS -I../../../zlib ../../../main.cpp libzstatic.a -fPIC -fpermissive
         cd ../../..
         DotNet-Pack
     }
@@ -93,12 +93,12 @@ else
             gcc -O3 -Wall -m64 -I../../../zlib -c ../../../zlib/adler32.c ../../../zlib/compress.c ../../../zlib/crc32.c ../../../zlib/deflate.c ../../../zlib/gzclose.c ../../../zlib/gzlib.c ../../../zlib/gzread.c ../../../zlib/gzwrite.c ../../../zlib/infback.c ../../../zlib/inffast.c ../../../zlib/inflate.c ../../../zlib/inftrees.c ../../../zlib/trees.c ../../../zlib/uncompr.c ../../../zlib/zutil.c -fPIC
             ar rsv libzstatic.a *.o
             rm -rf *.o
-            g++ -O3 -Wall -m64 -dynamiclib -o libZlibSharp.Native.dylib -DZLIBSHARPNATIVE_EXPORTS -I../../../zlib ../../../main.cpp libzstatic.a -fPIC -fpermissive
+            g++ -std=c++20 -O3 -Wall -m64 -dynamiclib -o libZlibSharp.Native.dylib -DZLIBSHARPNATIVE_EXPORTS -I../../../zlib ../../../main.cpp libzstatic.a -fPIC -fpermissive
             cd ../../osx-arm64/native
             gcc -O3 -Wall -arch arm64 -I../../../zlib -c ../../../zlib/adler32.c ../../../zlib/compress.c ../../../zlib/crc32.c ../../../zlib/deflate.c ../../../zlib/gzclose.c ../../../zlib/gzlib.c ../../../zlib/gzread.c ../../../zlib/gzwrite.c ../../../zlib/infback.c ../../../zlib/inffast.c ../../../zlib/inflate.c ../../../zlib/inftrees.c ../../../zlib/trees.c ../../../zlib/uncompr.c ../../../zlib/zutil.c -fPIC
             ar rsv libzstatic.a *.o
             rm -rf *.o
-            g++ -O3 -Wall -arch arm64 -dynamiclib -o libZlibSharp.Native.dylib -DZLIBSHARPNATIVE_EXPORTS -I../../../zlib ../../../main.cpp libzstatic.a -fPIC -fpermissive
+            g++ -std=c++20 -O3 -Wall -arch arm64 -dynamiclib -o libZlibSharp.Native.dylib -DZLIBSHARPNATIVE_EXPORTS -I../../../zlib ../../../main.cpp libzstatic.a -fPIC -fpermissive
             cd ../../..
             DotNet-Pack
         }

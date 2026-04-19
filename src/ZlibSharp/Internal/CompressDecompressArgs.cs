@@ -21,7 +21,4 @@ internal unsafe struct CompressDecompressArgs
 
     // decompress specific args
     internal UIntPtr bytesWritten;
-
-    // internal bits the native code uses, DO NOT TOUCH THIS POINTER AT ALL.
-    internal nint reserved;
 }

@@ -40,6 +40,7 @@
     <OutDir Condition="'$(Platform)' == 'Win32'">runtimes\win-x86\native\</OutDir>
     <OutDir Condition="'$(Platform)' == 'x64'">runtimes\win-x64\native\</OutDir>
     <OutDir Condition="'$(Platform)' == 'ARM64'">runtimes\win-arm64\native\</OutDir>
+    <MSVCPreviewEnabled Condition="'$(CI)' == ''">true</MSVCPreviewEnabled>
   </PropertyGroup>
 
   <ImportGroup Label="PropertySheets" Condition="'$(MSBuildProjectExtension)' != '.csproj'">
@@ -61,6 +62,8 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>./zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat Condition="'$(Configuration)' == 'Release'">None</DebugInformationFormat>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

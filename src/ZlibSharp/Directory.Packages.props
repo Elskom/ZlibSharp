@@ -12,7 +12,6 @@
     <PackageReference Include="ZlibSharp.Native.win" Version="*" />
     <PackageReference Include="ZlibSharp.Native.linux" Version="*" />
     <PackageReference Include="ZlibSharp.Native.osx" Version="*" />
-    <PackageReference Include="System.IO.Hashing" Version="*-*" />
   </ItemGroup>
 
 </Project>

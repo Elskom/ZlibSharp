@@ -1,7 +1,9 @@
 <Project>
 
   <ItemGroup Condition="'$(MSBuildProjectExtension)' != '.csproj'">
-    <ClInclude Include="main.h" />
+    <ClInclude Include="main.hpp" />
+    <ClInclude Include="chunk.hpp" />
+    <ClInclude Include="zlib_utils.hpp" />
     <ClInclude Include=".\zlib\deflate.h" />
     <ClInclude Include=".\zlib\gzguts.h" />
     <ClInclude Include=".\zlib\inffast.h" />
@@ -31,6 +33,7 @@
     <ClCompile Include=".\zlib\trees.c" />
     <ClCompile Include=".\zlib\uncompr.c" />
     <ClCompile Include=".\zlib\zutil.c" />
+    <None Include="cpp.hint" />
   </ItemGroup>
 
 </Project>

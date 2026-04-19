@@ -21,9 +21,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include=".\zlib\adler32.c">
       <Filter>Source Files\zlib</Filter>
     </ClCompile>
@@ -69,11 +66,11 @@
     <ClCompile Include=".\zlib\zutil.c">
       <Filter>Source Files\zlib</Filter>
     </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="main.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include=".\zlib\deflate.h">
       <Filter>Header Files\zlib</Filter>
     </ClInclude>
@@ -104,5 +101,17 @@
     <ClInclude Include=".\zlib\zutil.h">
       <Filter>Header Files\zlib</Filter>
     </ClInclude>
+    <ClInclude Include="chunk.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib_utils.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="main.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
   </ItemGroup>
 </Project>

@@ -12,25 +12,13 @@
     <PackageOutputPath>$(MSBuildThisFileDirectory)artifacts</PackageOutputPath>
     <!--
         The second and third entries here are the .NET 11 and the .NET 11 Transport Package sources.
-
-        The first entry is bullshit because setting RestoreSources to the values in
-        RestoreAdditionalProjectSources completely fucking removes nuget.org.
     -->
     <RestoreAdditionalProjectSources>
-        https://api.nuget.org/v3/index.json;
+        $(RestoreAdditionalProjectSources);
         https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet11/nuget/v3/index.json;
         https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet11-transport/nuget/v3/index.json;
         $(PackageOutputPath)
     </RestoreAdditionalProjectSources>
-    <!--
-        First we must set this to RestoreSources so the existing values are not lost.
-
-        Second, why the fuck is nuget.org not a part of this property by default???
-    -->
-    <RestoreSources>
-        $(RestoreSources);
-        $(RestoreAdditionalProjectSources)
-    </RestoreSources>
   </PropertyGroup>
 
 </Project>
